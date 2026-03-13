@@ -1,0 +1,205 @@
+[
+    {
+        "id": "tab_delta_counter",
+        "type": "tab",
+        "label": "Delta Status + Stop Counter",
+        "disabled": true,
+        "info": ""
+    },
+    {
+        "id": "mb_read_m0",
+        "type": "modbus-read",
+        "z": "tab_delta_counter",
+        "name": "Read M0 (isStopped)",
+        "topic": "",
+        "showStatusActivities": true,
+        "logIOActivities": false,
+        "showErrors": true,
+        "showWarnings": true,
+        "unitid": "1",
+        "dataType": "Coil",
+        "adr": "2048",
+        "quantity": "1",
+        "rate": "500",
+        "rateUnit": "ms",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "0a4dc517539c7567",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [
+                "fn_map_status",
+                "fn_count_stops",
+                "dbg_out1_data"
+            ],
+            [
+                "dbg_out2_polling"
+            ]
+        ]
+    },
+    {
+        "id": "fn_map_status",
+        "type": "function",
+        "z": "tab_delta_counter",
+        "name": "Map to marche/arrêt",
+        "func": "let v;\nif (msg.payload && msg.payload.data && Array.isArray(msg.payload.data)) {\n  v = msg.payload.data[0];\n} else if (Array.isArray(msg.payload)) {\n  v = msg.payload[0];\n} else {\n  v = msg.payload;\n}\n\nconst isStopped = (v === true) || (v === 1);\nmsg.payload = isStopped ? \"Machine en arrêt\" : \"Machine en marche\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 80,
+        "wires": [
+            [
+                "ui_text_status"
+            ]
+        ]
+    },
+    {
+        "id": "fn_count_stops",
+        "type": "function",
+        "z": "tab_delta_counter",
+        "name": "Count Stops (0->1)",
+        "func": "let v;\nif (msg.payload && msg.payload.data && Array.isArray(msg.payload.data)) {\n  v = msg.payload.data[0];\n} else if (Array.isArray(msg.payload)) {\n  v = msg.payload[0];\n} else {\n  v = msg.payload;\n}\n\nconst isStopped = (v === true) || (v === 1);\n\nlet prevStopped = flow.get(\"prevStopped\");\nlet stopCount = flow.get(\"stopCount\") || 0;\n\nif (prevStopped === undefined) {\n  prevStopped = isStopped;\n}\n\nif (prevStopped === false && isStopped === true) {\n  stopCount += 1;\n}\n\nflow.set(\"prevStopped\", isStopped);\nflow.set(\"stopCount\", stopCount);\n\nmsg.payload = stopCount;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 160,
+        "wires": [
+            [
+                "ui_text_stopcount"
+            ]
+        ]
+    },
+    {
+        "id": "ui_text_status",
+        "type": "ui_text",
+        "z": "tab_delta_counter",
+        "group": "ui_group_status",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Machine Status",
+        "label": "Machine status",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 730,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "ui_text_stopcount",
+        "type": "ui_text",
+        "z": "tab_delta_counter",
+        "group": "ui_group_status",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "Stop count",
+        "label": "Stop count",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 720,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "dbg_out1_data",
+        "type": "debug",
+        "z": "tab_delta_counter",
+        "name": "OUT1 (read data)",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 700,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "dbg_out2_polling",
+        "type": "debug",
+        "z": "tab_delta_counter",
+        "name": "OUT2 (polling/errors)",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 720,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "0a4dc517539c7567",
+        "type": "modbus-client",
+        "name": "dvp",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.1.5",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "ui_group_status",
+        "type": "ui_group",
+        "name": "Status",
+        "tab": "ui_tab_machine",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ui_tab_machine",
+        "type": "ui_tab",
+        "name": "Machine",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "a5f40c4771c2bebc",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-modbus": "5.45.2",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
