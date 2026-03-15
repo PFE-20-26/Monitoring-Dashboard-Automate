@@ -1,0 +1,444 @@
+[
+    {
+        "id": "2c5dc8e60bfa2009",
+        "type": "tab",
+        "label": "DVP12SE Stops → MySQL (FIX)",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "628495559e4fdb50",
+        "type": "comment",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Delta DVP12SE addressing (IMPORTANT)",
+        "info": "Node-RED (node-red-contrib-modbus) uses 0-based addresses.\n\nM bits:\n- M0 = 2048\n- M1 = 2049  (stopReady)\n- M2 = 2050  (stopAck)\n\nD registers:\n- D0 = 4096\n- D10 = 4106\n\nIf you used the 1-based Modbus table (M0=2049), subtract 1 for Node-RED.",
+        "x": 270,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "ea8dfd09be3711f7",
+        "type": "modbus-read",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Read stopReady (M1)  adr=2049",
+        "topic": "",
+        "showStatusActivities": true,
+        "logIOActivities": false,
+        "showErrors": true,
+        "showWarnings": true,
+        "unitid": "1",
+        "dataType": "Coil",
+        "adr": "2049",
+        "quantity": "1",
+        "rate": "200",
+        "rateUnit": "ms",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "0a4dc517539c7567",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 220,
+        "y": 120,
+        "wires": [
+            [
+                "136163c56de1c695"
+            ],
+            [
+                "ea33ad749a430586"
+            ]
+        ]
+    },
+    {
+        "id": "ea33ad749a430586",
+        "type": "debug",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Modbus errors (show msg.error)",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "error",
+        "targetType": "msg",
+        "statusVal": "error.message",
+        "statusType": "msg",
+        "x": 520,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "136163c56de1c695",
+        "type": "function",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Extract stopReady boolean",
+        "func": "let bits = null;\nif (msg.payload && Array.isArray(msg.payload.data)) bits = msg.payload.data;\nelse if (Array.isArray(msg.payload)) bits = msg.payload;\nelse if (msg.payload && Array.isArray(msg.payload.payload)) bits = msg.payload.payload;\n\nif (!bits || bits.length === 0) return null;\n\nconst v = bits[0];\nconst stopReady = (v === true || v === 1 || v === '1');\nmsg.payload = stopReady;\nmsg.stopReady = stopReady;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 120,
+        "wires": [
+            [
+                "78933b7dc5e338c7",
+                "73ed1d6e7c4578de"
+            ]
+        ]
+    },
+    {
+        "id": "73ed1d6e7c4578de",
+        "type": "debug",
+        "z": "2c5dc8e60bfa2009",
+        "name": "stopReady value",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "msg",
+        "x": 760,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "78933b7dc5e338c7",
+        "type": "rbe",
+        "z": "2c5dc8e60bfa2009",
+        "name": "RBE (edge detect)",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "property": "payload",
+        "x": 740,
+        "y": 120,
+        "wires": [
+            [
+                "3cd2cb3a5bd70fa4"
+            ]
+        ]
+    },
+    {
+        "id": "3cd2cb3a5bd70fa4",
+        "type": "switch",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Only when stopReady == true",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 260,
+        "y": 240,
+        "wires": [
+            [
+                "1fee39a0dba609fc"
+            ]
+        ]
+    },
+    {
+        "id": "1fee39a0dba609fc",
+        "type": "modbus-getter",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Read TRD D10..D26  adr=4106 qty=17",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "4106",
+        "quantity": "17",
+        "server": "0a4dc517539c7567",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "x": 210,
+        "y": 320,
+        "wires": [
+            [
+                "3d7203982ff54e2a"
+            ],
+            [
+                "ea33ad749a430586"
+            ]
+        ]
+    },
+    {
+        "id": "3d7203982ff54e2a",
+        "type": "function",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Build SQL — correct columns (Jour/Début/Fin)",
+        "func": "const MICRO_STOP_SEC = 30;\nconst DEFAULT_CAUSE_ID = 1;   // cause_id par défaut (modifiable)\nconst NC_CAUSE_ID      = 16;  // cause_id micro-arrêt NC\n\nlet regs = null;\nconst p = msg.payload;\nif (p && Array.isArray(p.data))         regs = p.data;\nelse if (Array.isArray(p))              regs = p;\nelse if (p && Array.isArray(p.payload)) regs = p.payload;\n\nif (!regs || regs.length < 17) {\n  node.error('Expected 17 regs (D10..D26)', msg);\n  return null;\n}\n\nfunction pad2(n) { return String(n).padStart(2, '0'); }\n\n// Start TRD : D10..D16 => idx 0..6\nconst y1  = Number(regs[0]);\nconst mo1 = Number(regs[2]);\nconst d1  = Number(regs[3]);\nconst h1  = Number(regs[4]);\nconst mi1 = Number(regs[5]);\nconst s1  = Number(regs[6]);\n\n// Stop TRD : D20..D26 => idx 10..16\nconst y2  = Number(regs[10]);\nconst mo2 = Number(regs[12]);\nconst d2  = Number(regs[13]);\nconst h2  = Number(regs[14]);\nconst mi2 = Number(regs[15]);\nconst s2  = Number(regs[16]);\n\n// ✅ Jour = DATE  (YYYY-MM-DD)\nconst jour  = `${y1}-${pad2(mo1)}-${pad2(d1)}`;\n\n// ✅ Début = TIME (HH:mm:ss)\nconst debut = `${pad2(h1)}:${pad2(mi1)}:${pad2(s1)}`;\n\n// ✅ Fin = TIME   (HH:mm:ss)\nconst fin   = `${pad2(h2)}:${pad2(mi2)}:${pad2(s2)}`;\n\n// Validation\nconst startMs = Date.UTC(y1, mo1-1, d1, h1, mi1, s1);\nconst stopMs  = Date.UTC(y2, mo2-1, d2, h2, mi2, s2);\n\nif (!Number.isFinite(startMs) || !Number.isFinite(stopMs) || stopMs < startMs) {\n  node.error(`Bad timestamps: start=${jour} ${debut} stop=${fin}`, msg);\n  return null;\n}\n\nconst durationSec = Math.floor((stopMs - startMs) / 1000);\n\n// Micro-arrêt < 30s → cause NC(16), sinon défaut(1)\nconst cause_id = durationSec < MICRO_STOP_SEC ? NC_CAUSE_ID : DEFAULT_CAUSE_ID;\n\nmsg.stopKey = `${jour} ${debut}|${fin}`;\nmsg.stop    = { jour, debut, fin, durationSec, cause_id };\n\n// ✅ INSERT avec les vrais noms de colonnes de ta DB\nmsg.topic   = 'INSERT INTO stops (`Jour`, `Debut`, `Fin`, `cause_id`) VALUES (?, ?, ?, ?)';\nmsg.payload = [jour, debut, fin, cause_id];\n\nnode.log(`INSERT: ${jour} ${debut} → ${fin} (${durationSec}s) cause_id=${cause_id}`);\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 320,
+        "wires": [
+            [
+                "b0f644f38b8698d5",
+                "256ccb96f873f473"
+            ]
+        ]
+    },
+    {
+        "id": "256ccb96f873f473",
+        "type": "debug",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Built stop (debug)",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "stop",
+        "targetType": "msg",
+        "statusVal": "stop.durationSec",
+        "statusType": "msg",
+        "x": 860,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "b0f644f38b8698d5",
+        "type": "function",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Skip duplicate stopKey",
+        "func": "const last = flow.get('lastStopKey');\nif (last && msg.stopKey === last) {\n  node.status({ fill:'yellow', shape:'ring', text:'duplicate skipped' });\n  return null;\n}\nflow.set('lastStopKey', msg.stopKey);\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 400,
+        "wires": [
+            [
+                "a33abfd5983308d7"
+            ]
+        ]
+    },
+    {
+        "id": "a33abfd5983308d7",
+        "type": "mysql",
+        "z": "2c5dc8e60bfa2009",
+        "mydb": "23e89f1872a8178f",
+        "name": "MySQL INSERT stop",
+        "x": 520,
+        "y": 400,
+        "wires": [
+            [
+                "0b0b8e3ae7f5fd6d",
+                "7e18aef58dd921c1"
+            ]
+        ]
+    },
+    {
+        "id": "7e18aef58dd921c1",
+        "type": "debug",
+        "z": "2c5dc8e60bfa2009",
+        "name": "MySQL result",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload.affectedRows",
+        "statusType": "msg",
+        "x": 840,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "0b0b8e3ae7f5fd6d",
+        "type": "function",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Store lastStopKey",
+        "func": "if (msg.stopKey) flow.set('lastStopKey', msg.stopKey);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 420,
+        "wires": [
+            [
+                "bd0c2253d27b23e6"
+            ]
+        ]
+    },
+    {
+        "id": "bd0c2253d27b23e6",
+        "type": "change",
+        "z": "2c5dc8e60bfa2009",
+        "name": "ACK payload = true",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            },
+            {
+                "t": "delete",
+                "p": "topic",
+                "pt": "msg"
+            }
+        ],
+        "x": 230,
+        "y": 500,
+        "wires": [
+            [
+                "1d38f80f4336f712"
+            ]
+        ]
+    },
+    {
+        "id": "1d38f80f4336f712",
+        "type": "modbus-write",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Write stopAck (M2) adr=2050",
+        "showStatusActivities": true,
+        "showErrors": true,
+        "showWarnings": true,
+        "unitid": "1",
+        "dataType": "Coil",
+        "adr": "2050",
+        "quantity": "1",
+        "server": "0a4dc517539c7567",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 520,
+        "y": 500,
+        "wires": [
+            [
+                "f7f21b5c0af74189"
+            ],
+            [
+                "ea33ad749a430586"
+            ]
+        ]
+    },
+    {
+        "id": "f7f21b5c0af74189",
+        "type": "debug",
+        "z": "2c5dc8e60bfa2009",
+        "name": "ACK written",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "msg",
+        "x": 760,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "0aeb0ff4b757090c",
+        "type": "catch",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Catch errors (all)",
+        "scope": null,
+        "uncaught": false,
+        "x": 200,
+        "y": 580,
+        "wires": [
+            [
+                "e56e8482c971e4d6"
+            ]
+        ]
+    },
+    {
+        "id": "e56e8482c971e4d6",
+        "type": "debug",
+        "z": "2c5dc8e60bfa2009",
+        "name": "Caught error (full msg)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "error.message",
+        "statusType": "msg",
+        "x": 520,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "0a4dc517539c7567",
+        "type": "modbus-client",
+        "name": "dvp",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.1.5",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "23e89f1872a8178f",
+        "type": "MySQLdatabase",
+        "name": "dbase",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "dashboard",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "c574fc81717b4d64",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-modbus": "5.45.2",
+            "node-red-node-mysql": "3.0.0"
+        }
+    }
+]
