@@ -1,33 +1,33 @@
 [
     {
-        "id": "7f3e086f86256379",
+        "id": "c06394e6d9fb11ee",
         "type": "tab",
         "label": "DVP12SE Stops → MySQL",
         "disabled": false,
         "info": ""
     },
     {
-        "id": "a708b4a65f6763ac",
+        "id": "3fa3160bca6ba8af",
         "type": "comment",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "── POLLING M1 → INSERT DB ──────────────────────────────",
         "x": 300,
         "y": 40,
         "wires": []
     },
     {
-        "id": "722ff27f87c5d922",
+        "id": "cd63b7b3aa3a7e08",
         "type": "comment",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "── HTTP COMMANDS (depuis server.js) ─────────────────────",
         "x": 300,
         "y": 700,
         "wires": []
     },
     {
-        "id": "099ef15e06721e97",
+        "id": "c88339c82e2948c7",
         "type": "modbus-read",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Read stopReady (M1) adr=2049",
         "topic": "",
         "showStatusActivities": true,
@@ -52,17 +52,17 @@
         "y": 100,
         "wires": [
             [
-                "c7ec4a47aa66a166"
+                "996db50a0159689c"
             ],
             [
-                "1939e78baa24d095"
+                "ad38422e110cfd5f"
             ]
         ]
     },
     {
-        "id": "1939e78baa24d095",
+        "id": "ad38422e110cfd5f",
         "type": "debug",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Modbus errors",
         "active": false,
         "tosidebar": true,
@@ -75,9 +75,9 @@
         "wires": []
     },
     {
-        "id": "c7ec4a47aa66a166",
+        "id": "996db50a0159689c",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Extract stopReady boolean",
         "func": "let bits = null;\nif (msg.payload && Array.isArray(msg.payload.data)) bits = msg.payload.data;\nelse if (Array.isArray(msg.payload)) bits = msg.payload;\nelse if (msg.payload && Array.isArray(msg.payload.payload)) bits = msg.payload.payload;\nif (!bits || bits.length === 0) return null;\nconst v = bits[0];\nconst stopReady = (v === true || v === 1 || v === '1');\nmsg.payload = stopReady;\nmsg.stopReady = stopReady;\nreturn msg;\n",
         "outputs": 1,
@@ -89,14 +89,14 @@
         "y": 100,
         "wires": [
             [
-                "8b9e2b5f898bd82e"
+                "0eaacf33d35bcd5d"
             ]
         ]
     },
     {
-        "id": "8b9e2b5f898bd82e",
+        "id": "0eaacf33d35bcd5d",
         "type": "rbe",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "RBE (edge detect)",
         "func": "rbe",
         "gap": "",
@@ -107,14 +107,14 @@
         "y": 100,
         "wires": [
             [
-                "6140518f3c183e5a"
+                "4fddf8e5aa645a14"
             ]
         ]
     },
     {
-        "id": "6140518f3c183e5a",
+        "id": "4fddf8e5aa645a14",
         "type": "switch",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Only stopReady == true",
         "property": "payload",
         "propertyType": "msg",
@@ -130,14 +130,14 @@
         "y": 220,
         "wires": [
             [
-                "f87c4251e4d1c6c3"
+                "4f0b6ca0211d349c"
             ]
         ]
     },
     {
-        "id": "f87c4251e4d1c6c3",
+        "id": "4f0b6ca0211d349c",
         "type": "modbus-getter",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Read D10..D30  adr=4106  qty=21",
         "showStatusActivities": true,
         "showErrors": true,
@@ -160,17 +160,17 @@
         "y": 300,
         "wires": [
             [
-                "8557cfee3827e10c"
+                "1460c3f6211ccda7"
             ],
             [
-                "1939e78baa24d095"
+                "ad38422e110cfd5f"
             ]
         ]
     },
     {
-        "id": "8557cfee3827e10c",
+        "id": "1460c3f6211ccda7",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Build SQL  (cause_id vient de D30)",
         "func": "// ─── Registres lus : D10..D30 (qty=21) ─────────────────────\n// idx 0..6   = D10..D16  Start TRD\n// idx 7..9   = D17..D19  (non utilisés)\n// idx 10..16 = D20..D26  Stop TRD\n// idx 17..19 = D27..D29  (non utilisés)\n// idx 20     = D30       cause_id écrit par le ladder ISPSoft\n\nconst MICRO_STOP_SEC = 30;\nconst NC_CAUSE_ID    = 16;\n\nlet regs = null;\nconst p = msg.payload;\nif (p && Array.isArray(p.data))         regs = p.data;\nelse if (Array.isArray(p))              regs = p;\nelse if (p && Array.isArray(p.payload)) regs = p.payload;\n\nif (!regs || regs.length < 21) {\n  node.error(`Expected 21 regs, got ${regs ? regs.length : 0}`, msg);\n  return null;\n}\n\nfunction pad2(n) { return String(n).padStart(2, '0'); }\n\n// Start TRD D10..D16\nconst y1  = Number(regs[0]);\nconst mo1 = Number(regs[2]);\nconst d1  = Number(regs[3]);\nconst h1  = Number(regs[4]);\nconst mi1 = Number(regs[5]);\nconst s1  = Number(regs[6]);\n\n// Stop TRD D20..D26\nconst y2  = Number(regs[10]);\nconst mo2 = Number(regs[12]);\nconst d2  = Number(regs[13]);\nconst h2  = Number(regs[14]);\nconst mi2 = Number(regs[15]);\nconst s2  = Number(regs[16]);\n\n// ✅ cause_id depuis D30 (écrit par ISPSoft selon le M bit actif)\nconst plcCauseId = Number(regs[20]) || 0;\n\nconst jour  = `${y1}-${pad2(mo1)}-${pad2(d1)}`;\nconst debut = `${pad2(h1)}:${pad2(mi1)}:${pad2(s1)}`;\nconst fin   = `${pad2(h2)}:${pad2(mi2)}:${pad2(s2)}`;\n\nconst startMs = Date.UTC(y1, mo1-1, d1, h1, mi1, s1);\nconst stopMs  = Date.UTC(y2, mo2-1, d2, h2, mi2, s2);\n\nif (!Number.isFinite(startMs) || !Number.isFinite(stopMs) || stopMs < startMs) {\n  node.error(`Bad timestamps: ${jour} ${debut} → ${fin}`, msg);\n  return null;\n}\n\nconst durationSec = Math.floor((stopMs - startMs) / 1000);\n\n// Micro-arrêt < 30s → NC(16), sinon cause du PLC D30\nconst cause_id = durationSec < MICRO_STOP_SEC ? NC_CAUSE_ID : (plcCauseId || 1);\n\nmsg.stopKey = `${jour} ${debut}|${fin}`;\nmsg.stop    = { jour, debut, fin, durationSec, cause_id, plcCauseId };\n\nmsg.topic   = 'INSERT INTO stops (`Jour`, `Debut`, `Fin`, `cause_id`) VALUES (?, ?, ?, ?)';\nmsg.payload = [jour, debut, fin, cause_id];\n\nnode.log(`INSERT: ${jour} ${debut}→${fin} | ${durationSec}s | cause_id=${cause_id} (D30=${plcCauseId})`);\nreturn msg;\n",
         "outputs": 1,
@@ -183,15 +183,15 @@
         "y": 300,
         "wires": [
             [
-                "7c5aaba16d0ba3e2",
-                "14cfc4daf0572d7f"
+                "f57b452d2354c8fd",
+                "ac0e705c6ff8bca6"
             ]
         ]
     },
     {
-        "id": "14cfc4daf0572d7f",
+        "id": "ac0e705c6ff8bca6",
         "type": "debug",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Built stop (debug)",
         "active": true,
         "tosidebar": true,
@@ -204,9 +204,9 @@
         "wires": []
     },
     {
-        "id": "7c5aaba16d0ba3e2",
+        "id": "f57b452d2354c8fd",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Skip duplicate stopKey",
         "func": "const last = flow.get('lastStopKey');\nif (last && msg.stopKey === last) {\n  node.status({ fill:'yellow', shape:'ring', text:'duplicate skipped' });\n  return null;\n}\nflow.set('lastStopKey', msg.stopKey);\nreturn msg;\n",
         "outputs": 1,
@@ -218,29 +218,29 @@
         "y": 400,
         "wires": [
             [
-                "3cc3f7ce7c3a99ec"
+                "ad38cd1ffdd13cf7"
             ]
         ]
     },
     {
-        "id": "3cc3f7ce7c3a99ec",
+        "id": "ad38cd1ffdd13cf7",
         "type": "mysql",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "mydb": "23e89f1872a8178f",
         "name": "MySQL INSERT stop",
         "x": 480,
         "y": 420,
         "wires": [
             [
-                "8cda29dc96bcd701",
-                "28a035cd805bca44"
+                "676761d35d837efd",
+                "d03e7dc90319e931"
             ]
         ]
     },
     {
-        "id": "28a035cd805bca44",
+        "id": "d03e7dc90319e931",
         "type": "debug",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "MySQL result",
         "active": true,
         "tosidebar": true,
@@ -253,9 +253,9 @@
         "wires": []
     },
     {
-        "id": "8cda29dc96bcd701",
+        "id": "676761d35d837efd",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Store lastStopKey",
         "func": "if (msg.stopKey) flow.set('lastStopKey', msg.stopKey);\nreturn msg;",
         "outputs": 1,
@@ -267,14 +267,14 @@
         "y": 420,
         "wires": [
             [
-                "2ddfe61fa6c2f595"
+                "2691d3c83548a7be"
             ]
         ]
     },
     {
-        "id": "2ddfe61fa6c2f595",
+        "id": "2691d3c83548a7be",
         "type": "change",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "ACK payload = true",
         "rules": [
             {
@@ -294,14 +294,14 @@
         "y": 500,
         "wires": [
             [
-                "9603c7b892c783f2"
+                "53da7e45a3fe452b"
             ]
         ]
     },
     {
-        "id": "9603c7b892c783f2",
+        "id": "53da7e45a3fe452b",
         "type": "modbus-write",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Write stopAck (M2) adr=2050",
         "showStatusActivities": true,
         "showErrors": true,
@@ -319,17 +319,17 @@
         "y": 500,
         "wires": [
             [
-                "af032284e45ccf01"
+                "388309e0541cfb89"
             ],
             [
-                "1939e78baa24d095"
+                "ad38422e110cfd5f"
             ]
         ]
     },
     {
-        "id": "af032284e45ccf01",
+        "id": "388309e0541cfb89",
         "type": "debug",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "ACK written",
         "active": true,
         "tosidebar": true,
@@ -341,9 +341,9 @@
         "wires": []
     },
     {
-        "id": "dad111bddbf527a7",
+        "id": "ec71bfcf5d7c58f6",
         "type": "catch",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Catch errors (all)",
         "scope": null,
         "uncaught": false,
@@ -351,14 +351,14 @@
         "y": 600,
         "wires": [
             [
-                "65016700a85b9333"
+                "4cc499090ca4b99e"
             ]
         ]
     },
     {
-        "id": "65016700a85b9333",
+        "id": "4cc499090ca4b99e",
         "type": "debug",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Caught error (full msg)",
         "active": true,
         "tosidebar": true,
@@ -371,9 +371,9 @@
         "wires": []
     },
     {
-        "id": "bed77b91b7b27a00",
+        "id": "be32454f55c5fd3c",
         "type": "http in",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "POST /plc-set-m0",
         "url": "/plc-set-m0",
         "method": "post",
@@ -381,14 +381,14 @@
         "y": 740,
         "wires": [
             [
-                "af568b3337de498e"
+                "aa1ef15db7e8090e"
             ]
         ]
     },
     {
-        "id": "af568b3337de498e",
+        "id": "aa1ef15db7e8090e",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Prepare M0 write",
         "func": "// msg.payload.value = 1 (ON) or 0 (OFF)\nconst val  = msg.payload.value;\nmsg._res   = msg.res; // save HTTP response\nmsg.payload = (val === 1 || val === true);\nreturn msg;\n",
         "outputs": 1,
@@ -400,14 +400,14 @@
         "y": 740,
         "wires": [
             [
-                "08883d60f0d716de"
+                "06f234c1b4dfe249"
             ]
         ]
     },
     {
-        "id": "08883d60f0d716de",
+        "id": "06f234c1b4dfe249",
         "type": "modbus-write",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Write M0  adr=2048",
         "showStatusActivities": true,
         "showErrors": true,
@@ -425,17 +425,17 @@
         "y": 740,
         "wires": [
             [
-                "33ab51e57fde252d"
+                "eb4a216fe84b79f8"
             ],
             [
-                "1939e78baa24d095"
+                "ad38422e110cfd5f"
             ]
         ]
     },
     {
-        "id": "33ab51e57fde252d",
+        "id": "eb4a216fe84b79f8",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "HTTP 200",
         "func": "msg.res = msg._res;\nmsg.payload = { ok: true };\nmsg.statusCode = 200;\nreturn msg;\n",
         "outputs": 1,
@@ -447,14 +447,14 @@
         "y": 740,
         "wires": [
             [
-                "ad4afd199a7cc429"
+                "97a62e68d0bf5c80"
             ]
         ]
     },
     {
-        "id": "ad4afd199a7cc429",
+        "id": "97a62e68d0bf5c80",
         "type": "http response",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "",
         "statusCode": "200",
         "headers": {
@@ -465,9 +465,9 @@
         "wires": []
     },
     {
-        "id": "afe073d8874e20c0",
+        "id": "93438a629e8e5fc6",
         "type": "http in",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "POST /plc-set-cause",
         "url": "/plc-set-cause",
         "method": "post",
@@ -475,14 +475,14 @@
         "y": 840,
         "wires": [
             [
-                "006d8a87a21d8997"
+                "30e73c99c13d71e7"
             ]
         ]
     },
     {
-        "id": "006d8a87a21d8997",
+        "id": "30e73c99c13d71e7",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Prepare cause M bit (flex write)",
         "func": "// msg.payload.address = coil address (M10..M24 = 2058..2072)\n// msg.payload.value    = 1 (ON) or 0 (OFF)\nconst address = Number(msg.payload.address);\nconst value   = (msg.payload.value === 1 || msg.payload.value === true);\n\nmsg._res = msg.res; // save HTTP response\n\n// modbus-flex-write format\nmsg.payload = {\n  fc      : 5,       // FC05 Write Single Coil\n  unitid  : 1,\n  address : address,\n  quantity: 1,\n  value   : [value],\n};\n\nnode.log(`Set cause coil adr=${address} val=${value}`);\nreturn msg;\n",
         "outputs": 1,
@@ -494,14 +494,14 @@
         "y": 840,
         "wires": [
             [
-                "89e04a82299cb268"
+                "97e9e804f9f675b4"
             ]
         ]
     },
     {
-        "id": "89e04a82299cb268",
+        "id": "97e9e804f9f675b4",
         "type": "modbus-flex-write",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "Flex Write cause M bit",
         "showStatusActivities": true,
         "showErrors": true,
@@ -515,17 +515,17 @@
         "y": 840,
         "wires": [
             [
-                "723b4f43a23f7952"
+                "35ed4bce693f4dcc"
             ],
             [
-                "1939e78baa24d095"
+                "ad38422e110cfd5f"
             ]
         ]
     },
     {
-        "id": "723b4f43a23f7952",
+        "id": "35ed4bce693f4dcc",
         "type": "function",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "HTTP 200",
         "func": "msg.res = msg._res;\nmsg.payload = { ok: true };\nmsg.statusCode = 200;\nreturn msg;\n",
         "outputs": 1,
@@ -537,14 +537,14 @@
         "y": 840,
         "wires": [
             [
-                "2da510c92a61a424"
+                "b5525a3d11856712"
             ]
         ]
     },
     {
-        "id": "2da510c92a61a424",
+        "id": "b5525a3d11856712",
         "type": "http response",
-        "z": "7f3e086f86256379",
+        "z": "c06394e6d9fb11ee",
         "name": "",
         "statusCode": "200",
         "headers": {
@@ -595,7 +595,7 @@
         "charset": "UTF8"
     },
     {
-        "id": "5d05de8dbd28c66d",
+        "id": "6e91e334348165fe",
         "type": "global-config",
         "env": [],
         "modules": {
