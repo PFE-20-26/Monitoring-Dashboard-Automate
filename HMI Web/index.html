@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contrôle Machine</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: #0f172a;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── PAGES ─────────────────────────────────── */
+    .page { display: none; width: 100%; min-height: 100vh; }
+    .page.active { display: flex; }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — MAIN
+    ═══════════════════════════════════════════ */
+    #page-main {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      padding: 40px 20px;
+    }
+
+    .main-title {
+      color: #f1f5f9;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #94a3b8;
+    }
+
+    .dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #22c55e;
+      transition: background 0.3s;
+    }
+    .dot.stopped { background: #ef4444; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Big round button */
+    .main-btn {
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #16a34a;
+      box-shadow: 0 0 0 10px rgba(34,197,94,0.12), 0 16px 50px rgba(0,0,0,0.5);
+      transition: all 0.2s;
+    }
+    .main-btn:hover  { filter: brightness(1.12); transform: scale(1.04); }
+    .main-btn:active { transform: scale(0.96); }
+    .main-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .main-btn.stopped {
+      background: #dc2626;
+      box-shadow: 0 0 0 10px rgba(239,68,68,0.12), 0 16px 50px rgba(0,0,0,0.5);
+    }
+    .main-btn .btn-icon { font-size: 2.8rem; line-height: 1; }
+
+    /* Active cause badge */
+    .cause-badge {
+      display: none;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 12px;
+      padding: 10px 20px;
+      color: #fca5a5;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+      max-width: 320px;
+    }
+    .cause-badge.visible { display: block; }
+
+    .error-msg {
+      display: none;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 0.82rem;
+      text-align: center;
+      max-width: 320px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 2 — CAUSES GRID
+    ═══════════════════════════════════════════ */
+    #page-causes {
+      flex-direction: column;
+      padding: 24px 20px;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .causes-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #94a3b8;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .back-btn:hover { background: #334155; color: #f1f5f9; }
+
+    .causes-title {
+      color: #f1f5f9;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* 3-column grid like reference image */
+    .causes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    @media (max-width: 600px) {
+      .causes-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .cause-btn {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      color: #e2e8f0;
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 20px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.3;
+    }
+    .cause-btn:hover {
+      background: #dc2626;
+      border-color: #ef4444;
+      color: white;
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(220,38,38,0.3);
+    }
+    .cause-btn:active { transform: scale(0.97); }
+    .cause-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Loading spinner */
+    .spinner {
+      display: none;
+      width: 40px; height: 40px;
+      border: 3px solid #334155;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 40px auto;
+    }
+    .spinner.visible { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ PAGE 1 : MAIN ════════════ -->
+<div id="page-main" class="page active">
+  <h1 class="main-title">Contrôle Machine</h1>
+
+  <div class="status-row">
+    <div class="dot" id="dot"></div>
+    <span id="statusText">Machine en marche</span>
+  </div>
+
+  <!-- Cause active pendant l'arrêt -->
+  <div class="cause-badge" id="causeBadge"></div>
+
+  <!-- Bouton principal -->
+  <button class="main-btn" id="mainBtn" onclick="handleMainBtn()">
+    <span class="btn-icon" id="btnIcon">▶</span>
+    <span id="btnLabel">MARCHE</span>
+  </button>
+
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<!-- ════════════ PAGE 2 : CAUSES ════════════ -->
+<div id="page-causes" class="page">
+  <div class="causes-header">
+    <button class="back-btn" onclick="showPage('main')">← Retour</button>
+    <span class="causes-title">Sélectionner la cause de l'arrêt</span>
+  </div>
+
+  <div class="spinner" id="spinner"></div>
+  <div class="causes-grid" id="causesGrid"></div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000';
+
+  let isStopped    = false;
+  let pendingCause = null;
+
+  // ── Navigation ────────────────────────────────────────
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+  }
+
+  // ── Update main page UI ───────────────────────────────
+  function updateMainUI(stopped, cause) {
+    isStopped    = stopped;
+    pendingCause = cause;
+
+    const btn    = document.getElementById('mainBtn');
+    const dot    = document.getElementById('dot');
+    const status = document.getElementById('statusText');
+    const icon   = document.getElementById('btnIcon');
+    const label  = document.getElementById('btnLabel');
+    const badge  = document.getElementById('causeBadge');
+
+    if (stopped) {
+      btn.classList.add('stopped');
+      dot.classList.add('stopped');
+      status.textContent = 'Machine arrêtée';
+      icon.textContent   = '⏹';
+      label.textContent  = 'ARRÊT';
+      badge.textContent  = '⚠ Cause : ' + (cause?.name || '—');
+      badge.classList.add('visible');
+    } else {
+      btn.classList.remove('stopped');
+      dot.classList.remove('stopped');
+      status.textContent = 'Machine en marche';
+      icon.textContent   = '▶';
+      label.textContent  = 'MARCHE';
+      badge.classList.remove('visible');
+    }
+  }
+
+  // ── Main button click ─────────────────────────────────
+  function handleMainBtn() {
+    hideError();
+    if (!isStopped) {
+      // Machine en marche → afficher la page des causes
+      showPage('causes');
+    } else {
+      // Machine arrêtée → terminer l'arrêt
+      triggerToggle(null);
+    }
+  }
+
+  // ── Cause selected (utilise data-attributes, pas onclick avec args) ──
+  function selectCause(btn) {
+    const causeId   = Number(btn.dataset.id);
+    const causeName = btn.dataset.name;
+    showPage('main');
+    triggerToggle({ causeId, causeName });
+  }
+
+  // ── Call /toggle ──────────────────────────────────────
+  async function triggerToggle(cause) {
+    const btn = document.getElementById('mainBtn');
+    btn.disabled = true;
+    hideError();
+
+    const body = cause
+      ? { causeId: cause.causeId, causeName: cause.causeName }
+      : {};
+
+    try {
+      const res  = await fetch(API + '/toggle', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
+      updateMainUI(data.isStopped, data.pendingCause);
+    } catch (e) {
+      showError('⚠ ' + (e.message || 'Impossible de contacter le serveur'));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Load causes from MySQL via server.js ──────────────
+  async function loadCauses() {
+    const spinner = document.getElementById('spinner');
+    const grid    = document.getElementById('causesGrid');
+
+    spinner.classList.add('visible');
+    grid.innerHTML = '';
+
+    let causes = [];
+    try {
+      const res = await fetch(API + '/causes');
+      if (!res.ok) throw new Error('Erreur ' + res.status);
+      causes = await res.json();
+    } catch (e) {
+      grid.innerHTML = '<p style="color:#f87171;padding:20px;">Erreur chargement causes: ' + e.message + '</p>';
+      spinner.classList.remove('visible');
+      return;
+    }
+
+    spinner.classList.remove('visible');
+
+    // ✅ data-attributes pour éviter les problèmes avec & ' " dans les noms
+    grid.innerHTML = causes.map(c => `
+      <button
+        class="cause-btn"
+        data-id="${c.id}"
+        data-name="${c.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+        onclick="selectCause(this)"
+      >${c.name}</button>
+    `).join('');
+  }
+
+  // ── Helpers ───────────────────────────────────────────
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent   = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
+  // ── Init ──────────────────────────────────────────────
+  (async () => {
+    // Charge les causes en arrière-plan
+    loadCauses();
+
+    // Récupère l'état actuel de la machine
+    try {
+      const res  = await fetch(API + '/status');
+      const data = await res.json();
+      updateMainUI(data.isStopped, data.pendingCause);
+    } catch {}
+  })();
+</script>
+</body>
+</html>
