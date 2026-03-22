@@ -1,384 +1,1099 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contrôle Machine</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Bebas+Neue&display=swap"
+    rel="stylesheet" />
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
+    :root {
+      --bg-base: #0a0c10;
+      --bg-panel: #111520;
+      --bg-card: #161b27;
+      --bg-inset: #0d1018;
+      --border-dim: #1e2a3a;
+      --border-bright: #2e4060;
+      --accent-blue: #0077ff;
+      --accent-cyan: #00c8ff;
+      --accent-green: #00e676;
+      --accent-red: #ff1744;
+      --accent-yellow: #ffd600;
+      --text-primary: #e8f0fe;
+      --text-secondary: #6a8099;
+      --text-dim: #3a4a5a;
+      --lcd-bg: #020d05;
+      --lcd-text: #00e676;
+      --lcd-glow: rgba(0, 230, 118, 0.25);
+      --btn-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    }
+
+    html,
     body {
-      background: #0f172a;
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg-base);
+      font-family: 'Rajdhani', sans-serif;
+      overflow: hidden;
+      color: var(--text-primary);
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px,
+          rgba(0, 0, 0, 0.06) 2px, rgba(0, 0, 0, 0.06) 4px);
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ═══════════════════════════════════
+       GRID  —  matches screenshot exactly
+       Header : 90px
+       Content: 1fr
+       Footer : 88px
+       Left   : 210px  |  Center: 1fr  |  Right: 285px
+    ═══════════════════════════════════ */
+    #hmi-main {
+      display: grid;
+      width: 100vw;
+      height: 100vh;
+      grid-template-rows: 90px 1fr 88px;
+      grid-template-columns: 210px 1fr 285px;
+    }
+
+    /* ─── HEADER ─────────────────────── */
+    .hmi-header {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      background: var(--bg-panel);
+      border-bottom: 2px solid var(--accent-blue);
+      box-shadow: 0 0 30px rgba(0, 119, 255, 0.18), 0 2px 0 var(--accent-cyan);
+      position: relative;
+      z-index: 10;
+    }
+
+    .hmi-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,
+          rgba(0, 119, 255, 0.07) 0%, transparent 28%,
+          transparent 72%, rgba(0, 200, 255, 0.05) 100%);
+      pointer-events: none;
+    }
+
+    .logo-slot {
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 210px;
+      height: 100%;
+      border-right: 1px solid var(--border-bright);
+      background: rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
     }
 
-    /* ── PAGES ─────────────────────────────────── */
-    .page { display: none; width: 100%; min-height: 100vh; }
-    .page.active { display: flex; }
+    .logo-slot.right {
+      border-right: none;
+      border-left: 1px solid var(--border-bright);
+    }
 
-    /* ═══════════════════════════════════════════
-       PAGE 1 — MAIN
-    ═══════════════════════════════════════════ */
-    #page-main {
+    /* ── Replace the div below with <img src="your-logo.png"> ── */
+    .logo-placeholder {
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 32px;
-      padding: 40px 20px;
+      width: 175px;
+      height: 62px;
+      border: 1px dashed var(--border-bright);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.02);
+      gap: 4px;
     }
 
-    .main-title {
-      color: #f1f5f9;
-      font-size: 1.4rem;
-      font-weight: 700;
+    .logo-placeholder .lp-icon {
+      font-size: 1.3rem;
+    }
+
+    .logo-placeholder span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text-dim);
       letter-spacing: 0.1em;
-      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.35;
     }
 
-    .status-row {
+    .header-center {
+      flex: 1;
       display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1rem;
-      font-weight: 500;
-      color: #94a3b8;
-    }
-
-    .dot {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: #22c55e;
-      transition: background 0.3s;
-    }
-    .dot.stopped { background: #ef4444; animation: pulse 1s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* Big round button */
-    .main-btn {
-      width: 180px; height: 180px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      color: white;
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      background: #16a34a;
-      box-shadow: 0 0 0 10px rgba(34,197,94,0.12), 0 16px 50px rgba(0,0,0,0.5);
-      transition: all 0.2s;
+      gap: 40px;
+      padding: 0 24px;
     }
-    .main-btn:hover  { filter: brightness(1.12); transform: scale(1.04); }
-    .main-btn:active { transform: scale(0.96); }
-    .main-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .main-btn.stopped {
-      background: #dc2626;
-      box-shadow: 0 0 0 10px rgba(239,68,68,0.12), 0 16px 50px rgba(0,0,0,0.5);
-    }
-    .main-btn .btn-icon { font-size: 2.8rem; line-height: 1; }
 
-    /* Active cause badge */
-    .cause-badge {
-      display: none;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 12px;
-      padding: 10px 20px;
-      color: #fca5a5;
-      font-size: 0.88rem;
+    .header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      letter-spacing: 0.28em;
+      color: var(--text-primary);
+      text-shadow: 0 0 22px rgba(0, 200, 255, 0.35);
+    }
+
+    .header-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 18px;
+      border: 1px solid var(--border-bright);
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .badge-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 9px var(--accent-green);
+      transition: all 0.3s;
+    }
+
+    .badge-dot.red {
+      background: var(--accent-red);
+      box-shadow: 0 0 9px var(--accent-red);
+      animation: pulseDot 0.8s infinite;
+    }
+
+    @keyframes pulseDot {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.2
+      }
+    }
+
+    .header-badge .bl {
+      font-size: 0.9rem;
       font-weight: 600;
-      text-align: center;
-      max-width: 320px;
-    }
-    .cause-badge.visible { display: block; }
-
-    .error-msg {
-      display: none;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #f87171;
-      border-radius: 10px;
-      padding: 10px 18px;
-      font-size: 0.82rem;
-      text-align: center;
-      max-width: 320px;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
     }
 
-    /* ═══════════════════════════════════════════
-       PAGE 2 — CAUSES GRID
-    ═══════════════════════════════════════════ */
-    #page-causes {
+    .header-badge .bv {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-primary);
+    }
+
+    /* ─── LEFT ───────────────────────── */
+    .left-col {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
       flex-direction: column;
-      padding: 24px 20px;
-      gap: 20px;
-      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 6px;
+      padding: 12px 10px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-bright);
     }
 
-    .causes-header {
+    .ecl-btn {
+      width: 100%;
+      padding: 17px 6px;
+      background: linear-gradient(180deg, #1e0a0a 0%, #2a0c0c 100%);
+      border: 1px solid #5a1515;
+      border-bottom: 3px solid var(--accent-red);
+      border-radius: 4px;
+      color: #ff7070;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.3;
+      transition: all 0.12s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ecl-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(255, 100, 100, 0.2);
+    }
+
+    .ecl-btn:hover {
+      filter: brightness(1.18);
+      box-shadow: 0 0 14px rgba(255, 23, 68, 0.3);
+    }
+
+    .ecl-btn:active {
+      transform: translateY(1px);
+      border-bottom-width: 1px;
+    }
+
+    .ecl-btn.on {
+      background: linear-gradient(180deg, #0a1e0e 0%, #0a2a10 100%);
+      border-color: #1a6b25;
+      border-bottom-color: var(--accent-green);
+      color: var(--accent-green);
+      box-shadow: 0 0 14px rgba(0, 230, 118, 0.25);
+    }
+
+    .ecl-btn.on::before {
+      background: rgba(0, 230, 118, 0.15);
+    }
+
+    .ecl-num {
+      display: block;
+      font-size: 0.78rem;
+      opacity: 0.65;
+      font-weight: 500;
+    }
+
+    /* ─── CENTER ─────────────────────── */
+    .center-col {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 14px;
+      gap: 0;
+      background: var(--bg-base);
+    }
+
+    .msg-panel {
+      flex: 1;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-bright);
+      border-radius: 3px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5), 0 0 1px var(--accent-cyan);
+    }
+
+    .msg-header {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-dim);
+      background: rgba(0, 119, 255, 0.05);
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
-    .back-btn {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      color: #94a3b8;
-      padding: 8px 16px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.15s;
+    .msg-header-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 6px var(--accent-cyan);
     }
-    .back-btn:hover { background: #334155; color: #f1f5f9; }
 
-    .causes-title {
-      color: #f1f5f9;
-      font-size: 1.2rem;
+    .msg-header-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      color: var(--accent-cyan);
+      opacity: 0.75;
+    }
+
+    .cause-active-row {
+      display: none;
+      padding: 7px 14px;
+      background: rgba(255, 23, 68, 0.07);
+      border-left: 3px solid var(--accent-red);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent-red);
+      letter-spacing: 0.06em;
+      flex-shrink: 0;
+      animation: flashRow 1.5s infinite;
+    }
+
+    .cause-active-row.visible {
+      display: block;
+    }
+
+    @keyframes flashRow {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.5
+      }
+    }
+
+    .msg-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-bright) transparent;
+    }
+
+    .msg-list::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .msg-list::-webkit-scrollbar-thumb {
+      background: var(--border-bright);
+    }
+
+    .msg-row {
+      padding: 4px 0;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--accent-red);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      display: flex;
+      gap: 12px;
+    }
+
+    .msg-row .ts {
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .msg-row.info {
+      color: var(--text-secondary);
+    }
+
+    .msg-row.ok {
+      color: var(--accent-green);
+    }
+
+    .msg-row.warn {
+      color: var(--accent-yellow);
+    }
+
+    /* ─── RIGHT ──────────────────────── */
+    .right-col {
+      grid-column: 3;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 14px;
+      gap: 18px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border-bright);
+    }
+
+    .display-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .display-label {
+      font-size: 0.82rem;
       font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
-    /* 3-column grid like reference image */
+    .display-value {
+      background: var(--lcd-bg);
+      border: 1px solid #082a10;
+      border-radius: 2px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.7rem;
+      color: var(--lcd-text);
+      padding: 7px 12px;
+      text-align: right;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 10px var(--lcd-glow), 0 0 24px rgba(0, 230, 118, 0.12);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 230, 118, 0.08);
+      position: relative;
+    }
+
+    .display-value::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 60%);
+      pointer-events: none;
+      border-radius: 2px;
+    }
+
+    .unit-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-align: right;
+      letter-spacing: 0.1em;
+      padding: 0 2px;
+    }
+
+    .machine-status {
+      margin-top: auto;
+      padding: 10px 12px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-dim);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green), 0 0 20px rgba(0, 230, 118, 0.3);
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .status-dot.stopped {
+      background: var(--accent-red);
+      box-shadow: 0 0 10px var(--accent-red), 0 0 20px rgba(255, 23, 68, 0.4);
+      animation: pulseDot 0.8s infinite;
+    }
+
+    .status-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .status-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--accent-green);
+      transition: color 0.3s;
+    }
+
+    .status-val.stopped {
+      color: var(--accent-red);
+    }
+
+    /* ─── BOTTOM ─────────────────────── */
+    .bottom-row {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-panel);
+      border-top: 2px solid var(--border-bright);
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .bottom-row::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg,
+          transparent 0%, var(--accent-blue) 20%,
+          var(--accent-cyan) 50%, var(--accent-blue) 80%, transparent 100%);
+      opacity: 0.5;
+    }
+
+    /* Plain red toggle buttons */
+    .bot-btn {
+      flex: 1;
+      height: 64px;
+      background: linear-gradient(180deg, #ff2020 0%, #cc0000 100%);
+      border: 1px solid #ff4444;
+      border-bottom: 3px solid #880000;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.12s;
+      box-shadow: var(--btn-shadow), inset 0 1px 0 rgba(255, 150, 150, 0.15);
+    }
+
+    .bot-btn:hover {
+      filter: brightness(1.12);
+    }
+
+    .bot-btn:active {
+      transform: translateY(1px);
+      border-bottom-width: 1px;
+    }
+
+    .bot-btn.on {
+      background: linear-gradient(180deg, #00e030 0%, #00aa22 100%);
+      border-color: #00ff44;
+      border-bottom-color: #005511;
+      box-shadow: var(--btn-shadow), 0 0 18px rgba(0, 230, 118, 0.4);
+    }
+
+    /* Blue gear / Paramètres */
+    .arret-btn {
+      width: 90px;
+      height: 68px;
+      flex-shrink: 0;
+      background: linear-gradient(145deg, #0055cc 0%, #003899 60%, #002060 100%);
+      border: 1px solid #0066ee;
+      border-bottom: 3px solid var(--accent-cyan);
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+      box-shadow: var(--btn-shadow), 0 0 22px rgba(0, 119, 255, 0.35),
+        inset 0 1px 0 rgba(100, 180, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .arret-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0, 180, 255, 0.18) 0%, transparent 70%);
+    }
+
+    .arret-btn:hover {
+      box-shadow: var(--btn-shadow), 0 0 32px rgba(0, 160, 255, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .arret-btn:active {
+      transform: translateY(1px);
+      border-bottom-width: 1px;
+    }
+
+    .arret-btn.stopped {
+      background: linear-gradient(145deg, #cc2200 0%, #991500 60%, #660e00 100%);
+      border-color: #ff3300;
+      border-bottom-color: #ff6644;
+      box-shadow: var(--btn-shadow), 0 0 26px rgba(255, 40, 0, 0.5);
+    }
+
+    .arret-btn .gear {
+      font-size: 1.8rem;
+      z-index: 1;
+      line-height: 1;
+      filter: drop-shadow(0 0 6px rgba(100, 200, 255, 0.5));
+      transition: transform 0.6s;
+    }
+
+    .arret-btn:hover .gear {
+      transform: rotate(30deg);
+    }
+
+    .arret-btn.stopped .gear {
+      filter: drop-shadow(0 0 6px rgba(255, 100, 60, 0.6));
+    }
+
+    .arret-btn .arret-label {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.88);
+      text-transform: uppercase;
+      z-index: 1;
+    }
+
+    .bot-divider {
+      width: 1px;
+      height: 44px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, transparent, var(--border-bright), transparent);
+    }
+
+    /* Rezet_Selc */
+    .razat-btn {
+      height: 64px;
+      padding: 0 22px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #141e2a 0%, #1a2535 100%);
+      border: 1px solid var(--border-bright);
+      border-bottom: 3px solid #3a5a80;
+      border-radius: 4px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: all 0.12s;
+      box-shadow: var(--btn-shadow);
+    }
+
+    .razat-btn:hover {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent-cyan);
+      box-shadow: var(--btn-shadow), 0 0 12px rgba(0, 200, 255, 0.2);
+    }
+
+    .razat-btn:active {
+      transform: translateY(1px);
+      border-bottom-width: 1px;
+    }
+
+    /* Marche */
+    .marche-btn {
+      height: 64px;
+      padding: 0 26px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #004d1a 0%, #006622 100%);
+      border: 1px solid #00aa44;
+      border-bottom: 3px solid var(--accent-green);
+      border-radius: 4px;
+      color: var(--accent-green);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      box-shadow: var(--btn-shadow), 0 0 18px rgba(0, 230, 118, 0.25);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.12s;
+    }
+
+    .marche-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0, 230, 118, 0.12) 0%, transparent 70%);
+    }
+
+    .marche-btn:hover {
+      box-shadow: var(--btn-shadow), 0 0 28px rgba(0, 230, 118, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .marche-btn:active {
+      transform: translateY(1px);
+      border-bottom-width: 1px;
+    }
+
+    /* ─── CAUSES OVERLAY ─────────────── */
+    #causes-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(5px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #causes-overlay.active {
+      display: flex;
+    }
+
+    .causes-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-bright);
+      border-top: 2px solid var(--accent-blue);
+      border-radius: 6px;
+      box-shadow: 0 0 60px rgba(0, 119, 255, 0.2), 0 30px 60px rgba(0, 0, 0, 0.7);
+      width: 92vw;
+      max-width: 720px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .causes-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-bright);
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .causes-panel-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.2em;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 10px rgba(0, 200, 255, 0.4);
+    }
+
+    .causes-close {
+      background: transparent;
+      border: 1px solid var(--border-bright);
+      border-radius: 3px;
+      color: var(--text-secondary);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: all 0.12s;
+    }
+
+    .causes-close:hover {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      box-shadow: 0 0 10px rgba(255, 23, 68, 0.2);
+    }
+
+    .causes-body {
+      overflow-y: auto;
+      padding: 18px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-bright) transparent;
+    }
+
     .causes-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      width: 100%;
-      max-width: 900px;
+      gap: 10px;
     }
 
-    @media (max-width: 600px) {
-      .causes-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width:500px) {
+      .causes-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .cause-btn {
-      background: #1e293b;
-      border: 2px solid #334155;
-      border-radius: 12px;
-      color: #e2e8f0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-bottom: 2px solid var(--border-bright);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: 'Rajdhani', sans-serif;
       font-size: 0.92rem;
       font-weight: 600;
-      padding: 20px 14px;
+      padding: 20px 10px;
       cursor: pointer;
-      transition: all 0.15s;
       text-align: center;
-      min-height: 80px;
+      min-height: 70px;
       display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1.3;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      transition: all 0.12s;
     }
-    .cause-btn:hover {
-      background: #dc2626;
-      border-color: #ef4444;
-      color: white;
-      transform: scale(1.02);
-      box-shadow: 0 4px 20px rgba(220,38,38,0.3);
-    }
-    .cause-btn:active { transform: scale(0.97); }
-    .cause-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* Loading spinner */
+    .cause-btn:hover {
+      background: rgba(255, 23, 68, 0.08);
+      border-color: var(--accent-red);
+      border-bottom-color: var(--accent-red);
+      color: var(--text-primary);
+      box-shadow: 0 0 16px rgba(255, 23, 68, 0.2);
+    }
+
+    .cause-btn:active {
+      transform: scale(0.97);
+    }
+
+    .cause-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     .spinner {
       display: none;
-      width: 40px; height: 40px;
-      border: 3px solid #334155;
-      border-top-color: #6366f1;
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--border-bright);
+      border-top-color: var(--accent-blue);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
-      margin: 40px auto;
+      margin: 30px auto;
     }
-    .spinner.visible { display: block; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner.visible {
+      display: block;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
+
 <body>
 
-<!-- ════════════ PAGE 1 : MAIN ════════════ -->
-<div id="page-main" class="page active">
-  <h1 class="main-title">Contrôle Machine</h1>
+  <div id="hmi-main">
 
-  <div class="status-row">
-    <div class="dot" id="dot"></div>
-    <span id="statusText">Machine en marche</span>
+    <!-- HEADER -->
+    <header class="hmi-header">
+      <div class="logo-slot">
+        <!--
+        REPLACE with:
+        <img src="logo-tesca.png" style="max-height:62px;max-width:180px;object-fit:contain;"/>
+      -->
+        <div class="logo-placeholder">
+          <span class="lp-icon">🏭</span>
+          <span>LOGO TESCA<br>[ à remplacer ]</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="header-title">Contrôle Machine</div>
+        <div class="header-badge">
+          <div class="badge-dot" id="headerDot"></div>
+          <span class="bl">État :</span>
+          <span class="bv" id="headerState">MARCHE</span>
+        </div>
+      </div>
+
+      <div class="logo-slot right">
+        <!--
+        REPLACE with:
+        <img src="logo-ts2i.png" style="max-height:62px;max-width:180px;object-fit:contain;"/>
+      -->
+        <div class="logo-placeholder">
+          <span class="lp-icon">🔷</span>
+          <span>LOGO TS2I<br>[ à remplacer ]</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- LEFT — Eclairage -->
+    <div class="left-col">
+      <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 5</span></button>
+      <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 4</span></button>
+      <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 3</span></button>
+      <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 2</span></button>
+      <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 1</span></button>
+    </div>
+
+    <!-- CENTER — Message log -->
+    <div class="center-col">
+      <div class="msg-panel">
+        <div class="msg-header">
+          <div class="msg-header-dot"></div>
+          <span class="msg-header-title">Journal des événements</span>
+        </div>
+        <div class="cause-active-row" id="causeActiveRow">⚠ ARRÊT ACTIF — CAUSE : —</div>
+        <div class="msg-list" id="msgList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT — Displays -->
+    <div class="right-col">
+      <div class="display-group">
+        <div class="display-label">Consigne de vitesse</div>
+        <div class="display-value">1234</div>
+        <div class="unit-tag">m / min</div>
+      </div>
+      <div class="display-group">
+        <div class="display-label">Lecture de vitesse</div>
+        <div class="display-value">1234</div>
+        <div class="unit-tag">m / min</div>
+      </div>
+      <div class="display-group">
+        <div class="display-label">Comptage métrique (ML)</div>
+        <div class="display-value">12345.67</div>
+        <div class="unit-tag">mètres</div>
+      </div>
+      <div class="machine-status">
+        <div class="status-dot" id="statusDot"></div>
+        <div>
+          <div class="status-label">Machine</div>
+          <div class="status-val" id="statusVal">EN MARCHE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+      <button class="bot-btn" onclick="toggleBot(this)"></button>
+      <button class="bot-btn" onclick="toggleBot(this)"></button>
+
+      <button class="arret-btn" id="arretBtn" onclick="handleArret()">
+        <span class="gear">⚙</span>
+        <span class="arret-label" id="arretLabel">Paramètres</span>
+      </button>
+
+      <div class="bot-divider"></div>
+
+      <button class="razat-btn">Rezet_Selc</button>
+      <button class="marche-btn">▶&nbsp;Marche</button>
+    </div>
+
   </div>
 
-  <!-- Cause active pendant l'arrêt -->
-  <div class="cause-badge" id="causeBadge"></div>
-
-  <!-- Bouton principal -->
-  <button class="main-btn" id="mainBtn" onclick="handleMainBtn()">
-    <span class="btn-icon" id="btnIcon">▶</span>
-    <span id="btnLabel">MARCHE</span>
-  </button>
-
-  <div class="error-msg" id="errorMsg"></div>
-</div>
-
-<!-- ════════════ PAGE 2 : CAUSES ════════════ -->
-<div id="page-causes" class="page">
-  <div class="causes-header">
-    <button class="back-btn" onclick="showPage('main')">← Retour</button>
-    <span class="causes-title">Sélectionner la cause de l'arrêt</span>
+  <!-- CAUSES OVERLAY -->
+  <div id="causes-overlay">
+    <div class="causes-panel">
+      <div class="causes-panel-header">
+        <span class="causes-panel-title">▶ Sélectionner la cause de l'arrêt</span>
+        <button class="causes-close" onclick="closeCauses()">✕ Annuler</button>
+      </div>
+      <div class="causes-body">
+        <div class="spinner" id="spinner"></div>
+        <div class="causes-grid" id="causesGrid"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="spinner" id="spinner"></div>
-  <div class="causes-grid" id="causesGrid"></div>
-</div>
+  <script>
+    const API = 'http://localhost:3000';
+    let isStopped = false;
+    let pendingCause = { id: 1, name: 'Panne machine' };
 
-<script>
-  const API = 'http://localhost:3000';
+    function toggleEcl(btn) { btn.classList.toggle('on'); }
+    function toggleBot(btn) { btn.classList.toggle('on'); }
 
-  let isStopped    = false;
-  let pendingCause = null;
+    function updateUI(stopped, cause) {
+      isStopped = stopped;
+      pendingCause = cause || pendingCause;
 
-  // ── Navigation ────────────────────────────────────────
-  function showPage(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-  }
+      const dot = document.getElementById('statusDot');
+      const statusVal = document.getElementById('statusVal');
+      const headerDot = document.getElementById('headerDot');
+      const headerSt = document.getElementById('headerState');
+      const arretBtn = document.getElementById('arretBtn');
+      const arretLbl = document.getElementById('arretLabel');
+      const causeRow = document.getElementById('causeActiveRow');
 
-  // ── Update main page UI ───────────────────────────────
-  function updateMainUI(stopped, cause) {
-    isStopped    = stopped;
-    pendingCause = cause;
-
-    const btn    = document.getElementById('mainBtn');
-    const dot    = document.getElementById('dot');
-    const status = document.getElementById('statusText');
-    const icon   = document.getElementById('btnIcon');
-    const label  = document.getElementById('btnLabel');
-    const badge  = document.getElementById('causeBadge');
-
-    if (stopped) {
-      btn.classList.add('stopped');
-      dot.classList.add('stopped');
-      status.textContent = 'Machine arrêtée';
-      icon.textContent   = '⏹';
-      label.textContent  = 'ARRÊT';
-      badge.textContent  = '⚠ Cause : ' + (cause?.name || '—');
-      badge.classList.add('visible');
-    } else {
-      btn.classList.remove('stopped');
-      dot.classList.remove('stopped');
-      status.textContent = 'Machine en marche';
-      icon.textContent   = '▶';
-      label.textContent  = 'MARCHE';
-      badge.classList.remove('visible');
-    }
-  }
-
-  // ── Main button click ─────────────────────────────────
-  function handleMainBtn() {
-    hideError();
-    if (!isStopped) {
-      // Machine en marche → afficher la page des causes
-      showPage('causes');
-    } else {
-      // Machine arrêtée → terminer l'arrêt
-      triggerToggle(null);
-    }
-  }
-
-  // ── Cause selected (utilise data-attributes, pas onclick avec args) ──
-  function selectCause(btn) {
-    const causeId   = Number(btn.dataset.id);
-    const causeName = btn.dataset.name;
-    showPage('main');
-    triggerToggle({ causeId, causeName });
-  }
-
-  // ── Call /toggle ──────────────────────────────────────
-  async function triggerToggle(cause) {
-    const btn = document.getElementById('mainBtn');
-    btn.disabled = true;
-    hideError();
-
-    const body = cause
-      ? { causeId: cause.causeId, causeName: cause.causeName }
-      : {};
-
-    try {
-      const res  = await fetch(API + '/toggle', {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
-      updateMainUI(data.isStopped, data.pendingCause);
-    } catch (e) {
-      showError('⚠ ' + (e.message || 'Impossible de contacter le serveur'));
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  // ── Load causes from MySQL via server.js ──────────────
-  async function loadCauses() {
-    const spinner = document.getElementById('spinner');
-    const grid    = document.getElementById('causesGrid');
-
-    spinner.classList.add('visible');
-    grid.innerHTML = '';
-
-    let causes = [];
-    try {
-      const res = await fetch(API + '/causes');
-      if (!res.ok) throw new Error('Erreur ' + res.status);
-      causes = await res.json();
-    } catch (e) {
-      grid.innerHTML = '<p style="color:#f87171;padding:20px;">Erreur chargement causes: ' + e.message + '</p>';
-      spinner.classList.remove('visible');
-      return;
+      if (stopped) {
+        dot.classList.add('stopped');
+        statusVal.textContent = 'ARRÊT'; statusVal.classList.add('stopped');
+        headerDot.classList.add('red');
+        headerSt.textContent = 'ARRÊT'; headerSt.style.color = 'var(--accent-red)';
+        arretBtn.classList.add('stopped'); arretLbl.textContent = 'Arrêt';
+        causeRow.textContent = '⚠ ARRÊT ACTIF — CAUSE : ' + (pendingCause?.name || '—');
+        causeRow.classList.add('visible');
+        addMsg('ARRÊT DÉCLENCHÉ — ' + (pendingCause?.name || '—'), 'error');
+      } else {
+        dot.classList.remove('stopped');
+        statusVal.textContent = 'EN MARCHE'; statusVal.classList.remove('stopped');
+        headerDot.classList.remove('red');
+        headerSt.textContent = 'MARCHE'; headerSt.style.color = '';
+        arretBtn.classList.remove('stopped'); arretLbl.textContent = 'Paramètres';
+        causeRow.classList.remove('visible');
+        addMsg('MACHINE EN MARCHE', 'ok');
+      }
     }
 
-    spinner.classList.remove('visible');
+    function addMsg(text, type = 'info') {
+      const list = document.getElementById('msgList');
+      const row = document.createElement('div');
+      row.className = 'msg-row ' + type;
+      const ts = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+      row.innerHTML = `<span class="ts">${ts}</span><span>${text}</span>`;
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
 
-    // ✅ data-attributes pour éviter les problèmes avec & ' " dans les noms
-    grid.innerHTML = causes.map(c => `
-      <button
-        class="cause-btn"
-        data-id="${c.id}"
-        data-name="${c.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
-        onclick="selectCause(this)"
-      >${c.name}</button>
-    `).join('');
-  }
+    function handleArret() {
+      if (!isStopped) openCauses();
+      else triggerToggle(null);
+    }
 
-  // ── Helpers ───────────────────────────────────────────
-  function showError(msg) {
-    const el = document.getElementById('errorMsg');
-    el.textContent   = msg;
-    el.style.display = 'block';
-  }
+    function openCauses() { document.getElementById('causes-overlay').classList.add('active'); }
+    function closeCauses() { document.getElementById('causes-overlay').classList.remove('active'); }
 
-  function hideError() {
-    document.getElementById('errorMsg').style.display = 'none';
-  }
+    function selectCause(btn) {
+      closeCauses();
+      triggerToggle({ causeId: Number(btn.dataset.id), causeName: btn.dataset.name });
+    }
 
-  // ── Init ──────────────────────────────────────────────
-  (async () => {
-    // Charge les causes en arrière-plan
-    loadCauses();
+    async function triggerToggle(cause) {
+      const btn = document.getElementById('arretBtn');
+      btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none';
+      try {
+        const res = await fetch(API + '/toggle', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cause ? { causeId: cause.causeId, causeName: cause.causeName } : {}),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
+        updateUI(data.isStopped, data.pendingCause);
+      } catch (e) {
+        addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
+      } finally {
+        btn.style.opacity = ''; btn.style.pointerEvents = '';
+      }
+    }
 
-    // Récupère l'état actuel de la machine
-    try {
-      const res  = await fetch(API + '/status');
-      const data = await res.json();
-      updateMainUI(data.isStopped, data.pendingCause);
-    } catch {}
-  })();
-</script>
+    async function loadCauses() {
+      const spinner = document.getElementById('spinner');
+      const grid = document.getElementById('causesGrid');
+      spinner.classList.add('visible'); grid.innerHTML = '';
+      try {
+        const res = await fetch(API + '/causes');
+        if (!res.ok) throw new Error('Erreur ' + res.status);
+        const causes = await res.json();
+        spinner.classList.remove('visible');
+        grid.innerHTML = causes.map(c => `
+        <button class="cause-btn"
+          data-id="${c.id}"
+          data-name="${c.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+          onclick="selectCause(this)">${c.name}</button>
+      `).join('');
+      } catch (e) {
+        spinner.classList.remove('visible');
+        grid.innerHTML = `<p style="color:var(--accent-red);padding:16px;grid-column:1/-1;
+        font-family:'Share Tech Mono',monospace;font-size:.8rem;">
+        ⚠ Erreur chargement causes : ${e.message}</p>`;
+      }
+    }
+
+    (async () => {
+      loadCauses();
+      addMsg('Système initialisé', 'info');
+      try {
+        const res = await fetch(API + '/status');
+        const data = await res.json();
+        updateUI(data.isStopped, data.pendingCause);
+      } catch {
+        addMsg('⚠ Serveur HMI non connecté', 'warn');
+      }
+    })();
+  </script>
 </body>
+
 </html>
