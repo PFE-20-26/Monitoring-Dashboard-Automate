@@ -59,11 +59,7 @@
     }
 
     /* ═══════════════════════════════════
-       GRID  —  matches screenshot exactly
-       Header : 90px
-       Content: 1fr
-       Footer : 88px
-       Left   : 210px  |  Center: 1fr  |  Right: 285px
+       GRID
     ═══════════════════════════════════ */
     #hmi-main {
       display: grid;
@@ -112,7 +108,6 @@
       border-left: 1px solid var(--border-bright);
     }
 
-    /* ── Replace the div below with <img src="your-logo.png"> ── */
     .logo-placeholder {
       display: flex;
       flex-direction: column;
@@ -288,7 +283,6 @@
       display: flex;
       flex-direction: column;
       padding: 12px 14px;
-      gap: 0;
       background: var(--bg-base);
     }
 
@@ -563,8 +557,8 @@
       box-shadow: var(--btn-shadow), 0 0 18px rgba(0, 230, 118, 0.4);
     }
 
-    /* Blue gear / Paramètres */
-    .arret-btn {
+    /* Blue PARAMÈTRES (non-functional placeholder) */
+    .params-btn {
       width: 90px;
       height: 68px;
       flex-shrink: 0;
@@ -572,65 +566,39 @@
       border: 1px solid #0066ee;
       border-bottom: 3px solid var(--accent-cyan);
       border-radius: 5px;
-      cursor: pointer;
+      cursor: default;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      transition: all 0.15s;
-      box-shadow: var(--btn-shadow), 0 0 22px rgba(0, 119, 255, 0.35),
+      box-shadow: var(--btn-shadow), 0 0 22px rgba(0, 119, 255, 0.3),
         inset 0 1px 0 rgba(100, 180, 255, 0.15);
       position: relative;
       overflow: hidden;
+      opacity: 0.75;
     }
 
-    .arret-btn::before {
+    .params-btn::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(0, 180, 255, 0.18) 0%, transparent 70%);
+      background: radial-gradient(ellipse at 50% 0%, rgba(0, 180, 255, 0.15) 0%, transparent 70%);
     }
 
-    .arret-btn:hover {
-      box-shadow: var(--btn-shadow), 0 0 32px rgba(0, 160, 255, 0.55);
-      transform: translateY(-1px);
-    }
-
-    .arret-btn:active {
-      transform: translateY(1px);
-      border-bottom-width: 1px;
-    }
-
-    .arret-btn.stopped {
-      background: linear-gradient(145deg, #cc2200 0%, #991500 60%, #660e00 100%);
-      border-color: #ff3300;
-      border-bottom-color: #ff6644;
-      box-shadow: var(--btn-shadow), 0 0 26px rgba(255, 40, 0, 0.5);
-    }
-
-    .arret-btn .gear {
+    .params-btn .gear {
       font-size: 1.8rem;
       z-index: 1;
       line-height: 1;
       filter: drop-shadow(0 0 6px rgba(100, 200, 255, 0.5));
-      transition: transform 0.6s;
     }
 
-    .arret-btn:hover .gear {
-      transform: rotate(30deg);
-    }
-
-    .arret-btn.stopped .gear {
-      filter: drop-shadow(0 0 6px rgba(255, 100, 60, 0.6));
-    }
-
-    .arret-btn .arret-label {
+    .params-btn .params-label {
       font-family: 'Rajdhani', sans-serif;
       font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.1em;
-      color: rgba(255, 255, 255, 0.88);
+      color: rgba(255, 255, 255, 0.85);
       text-transform: uppercase;
       z-index: 1;
     }
@@ -665,7 +633,6 @@
     .razat-btn:hover {
       color: var(--text-primary);
       border-bottom-color: var(--accent-cyan);
-      box-shadow: var(--btn-shadow), 0 0 12px rgba(0, 200, 255, 0.2);
     }
 
     .razat-btn:active {
@@ -673,7 +640,11 @@
       border-bottom-width: 1px;
     }
 
-    /* Marche */
+    /* ══ MARCHE button — main toggle ══════════════════════
+       Green = machine en marche → click to STOP
+       Red   = machine arrêtée  → click to restart
+       (colour flips after action, not before)
+    ═════════════════════════════════════════════════════ */
     .marche-btn {
       height: 64px;
       padding: 0 26px;
@@ -710,6 +681,34 @@
     .marche-btn:active {
       transform: translateY(1px);
       border-bottom-width: 1px;
+    }
+
+    .marche-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* When machine is stopped, button turns red to invite user to restart */
+    .marche-btn.stopped {
+      background: linear-gradient(180deg, #4d0000 0%, #660000 100%);
+      border-color: #aa0000;
+      border-bottom-color: var(--accent-red);
+      color: var(--accent-red);
+      box-shadow: var(--btn-shadow), 0 0 18px rgba(255, 23, 68, 0.3);
+      animation: pulseBtn 1.2s infinite;
+    }
+
+    @keyframes pulseBtn {
+
+      0%,
+      100% {
+        box-shadow: var(--btn-shadow), 0 0 18px rgba(255, 23, 68, 0.3);
+      }
+
+      50% {
+        box-shadow: var(--btn-shadow), 0 0 32px rgba(255, 23, 68, 0.6);
+      }
     }
 
     /* ─── CAUSES OVERLAY ─────────────── */
@@ -759,25 +758,15 @@
       text-shadow: 0 0 10px rgba(0, 200, 255, 0.4);
     }
 
-    .causes-close {
-      background: transparent;
-      border: 1px solid var(--border-bright);
-      border-radius: 3px;
-      color: var(--text-secondary);
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 6px 16px;
-      cursor: pointer;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      transition: all 0.12s;
-    }
-
-    .causes-close:hover {
-      border-color: var(--accent-red);
-      color: var(--accent-red);
-      box-shadow: 0 0 10px rgba(255, 23, 68, 0.2);
+    /* Cause overlay has NO cancel button — user MUST choose a cause */
+    .causes-notice {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--accent-yellow);
+      letter-spacing: 0.06em;
+      padding: 8px 20px;
+      background: rgba(255, 214, 0, 0.05);
+      border-bottom: 1px solid rgba(255, 214, 0, 0.1);
     }
 
     .causes-body {
@@ -833,11 +822,6 @@
       transform: scale(0.97);
     }
 
-    .cause-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
     .spinner {
       display: none;
       width: 36px;
@@ -857,6 +841,15 @@
       to {
         transform: rotate(360deg);
       }
+    }
+
+    /* Stop duration counter shown in overlay header */
+    .stop-timer {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--accent-red);
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 8px rgba(255, 23, 68, 0.5);
     }
   </style>
 </head>
@@ -948,28 +941,46 @@
 
     <!-- BOTTOM ROW -->
     <div class="bottom-row">
+      <!-- 2 red toggle buttons (future use) -->
       <button class="bot-btn" onclick="toggleBot(this)"></button>
       <button class="bot-btn" onclick="toggleBot(this)"></button>
 
-      <button class="arret-btn" id="arretBtn" onclick="handleArret()">
+      <!-- Blue PARAMÈTRES — placeholder, not functional yet -->
+      <div class="params-btn" title="Paramètres (à venir)">
         <span class="gear">⚙</span>
-        <span class="arret-label" id="arretLabel">Paramètres</span>
-      </button>
+        <span class="params-label">Paramètres</span>
+      </div>
 
       <div class="bot-divider"></div>
 
+      <!-- Rezet_Selc placeholder -->
       <button class="razat-btn">Rezet_Selc</button>
-      <button class="marche-btn">▶&nbsp;Marche</button>
+
+      <!--
+      MARCHE button — THE MAIN TOGGLE
+      Green = en marche  → click to start a stop
+      Red   = arrêtée    → click to restart (cause required if ≥30s)
+    -->
+      <button class="marche-btn" id="marcheBtn" onclick="handleMarche()">
+        ▶&nbsp;<span id="marcheBtnLabel">Marche</span>
+      </button>
     </div>
 
   </div>
 
-  <!-- CAUSES OVERLAY -->
+  <!-- ══════════════════════════════════════════
+     CAUSES OVERLAY
+     Appears only when stop ≥ 30s
+     NO cancel button — user MUST pick a cause
+══════════════════════════════════════════ -->
   <div id="causes-overlay">
     <div class="causes-panel">
       <div class="causes-panel-header">
         <span class="causes-panel-title">▶ Sélectionner la cause de l'arrêt</span>
-        <button class="causes-close" onclick="closeCauses()">✕ Annuler</button>
+        <span class="stop-timer" id="overlayTimer">00:00</span>
+      </div>
+      <div class="causes-notice">
+        ⚠ Durée ≥ 30s — La sélection d'une cause est obligatoire pour redémarrer.
       </div>
       <div class="causes-body">
         <div class="spinner" id="spinner"></div>
@@ -980,44 +991,52 @@
 
   <script>
     const API = 'http://localhost:3000';
-    let isStopped = false;
-    let pendingCause = { id: 1, name: 'Panne machine' };
+    const MICRO_STOP_THRESHOLD = 30; // seconds
 
+    let isStopped = false;
+    let stopStartTime = null;   // Date.now() of stop start (from server)
+    let pendingCause = null;
+    let timerInterval = null;
+
+    // ── Eclairage / bot toggle ─────────────────────────────
     function toggleEcl(btn) { btn.classList.toggle('on'); }
     function toggleBot(btn) { btn.classList.toggle('on'); }
 
-    function updateUI(stopped, cause) {
-      isStopped = stopped;
-      pendingCause = cause || pendingCause;
+    // ── Update all UI elements ─────────────────────────────
+    function updateUI(data) {
+      isStopped = data.isStopped;
+      stopStartTime = data.stopStartTime || null;
+      pendingCause = data.pendingCause || null;
 
       const dot = document.getElementById('statusDot');
       const statusVal = document.getElementById('statusVal');
       const headerDot = document.getElementById('headerDot');
       const headerSt = document.getElementById('headerState');
-      const arretBtn = document.getElementById('arretBtn');
-      const arretLbl = document.getElementById('arretLabel');
+      const marcheBtn = document.getElementById('marcheBtn');
+      const marcheLbl = document.getElementById('marcheBtnLabel');
       const causeRow = document.getElementById('causeActiveRow');
 
-      if (stopped) {
+      if (isStopped) {
         dot.classList.add('stopped');
         statusVal.textContent = 'ARRÊT'; statusVal.classList.add('stopped');
         headerDot.classList.add('red');
         headerSt.textContent = 'ARRÊT'; headerSt.style.color = 'var(--accent-red)';
-        arretBtn.classList.add('stopped'); arretLbl.textContent = 'Arrêt';
-        causeRow.textContent = '⚠ ARRÊT ACTIF — CAUSE : ' + (pendingCause?.name || '—');
+        marcheBtn.classList.add('stopped');
+        marcheLbl.textContent = 'Arrêt';
+        causeRow.textContent = '⚠ ARRÊT ACTIF — sélectionner une cause pour redémarrer';
         causeRow.classList.add('visible');
-        addMsg('ARRÊT DÉCLENCHÉ — ' + (pendingCause?.name || '—'), 'error');
       } else {
         dot.classList.remove('stopped');
         statusVal.textContent = 'EN MARCHE'; statusVal.classList.remove('stopped');
         headerDot.classList.remove('red');
         headerSt.textContent = 'MARCHE'; headerSt.style.color = '';
-        arretBtn.classList.remove('stopped'); arretLbl.textContent = 'Paramètres';
+        marcheBtn.classList.remove('stopped');
+        marcheLbl.textContent = 'Marche';
         causeRow.classList.remove('visible');
-        addMsg('MACHINE EN MARCHE', 'ok');
       }
     }
 
+    // ── Message log ────────────────────────────────────────
     function addMsg(text, type = 'info') {
       const list = document.getElementById('msgList');
       const row = document.createElement('div');
@@ -1028,37 +1047,112 @@
       list.scrollTop = list.scrollHeight;
     }
 
-    function handleArret() {
-      if (!isStopped) openCauses();
-      else triggerToggle(null);
+    // ── Format seconds as MM:SS ────────────────────────────
+    function formatDuration(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    function openCauses() { document.getElementById('causes-overlay').classList.add('active'); }
-    function closeCauses() { document.getElementById('causes-overlay').classList.remove('active'); }
-
-    function selectCause(btn) {
-      closeCauses();
-      triggerToggle({ causeId: Number(btn.dataset.id), causeName: btn.dataset.name });
+    // ── Elapsed stop time in seconds ───────────────────────
+    function getElapsedSeconds() {
+      if (!stopStartTime) return 0;
+      return Math.floor((Date.now() - stopStartTime) / 1000);
     }
 
-    async function triggerToggle(cause) {
-      const btn = document.getElementById('arretBtn');
-      btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none';
-      try {
-        const res = await fetch(API + '/toggle', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(cause ? { causeId: cause.causeId, causeName: cause.causeName } : {}),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
-        updateUI(data.isStopped, data.pendingCause);
-      } catch (e) {
-        addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
-      } finally {
-        btn.style.opacity = ''; btn.style.pointerEvents = '';
+    // ── Overlay timer updater ──────────────────────────────
+    function startOverlayTimer() {
+      stopOverlayTimer();
+      timerInterval = setInterval(() => {
+        const el = document.getElementById('overlayTimer');
+        if (el) el.textContent = formatDuration(getElapsedSeconds());
+      }, 500);
+    }
+    function stopOverlayTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    }
+
+    // ── MARCHE button — main logic ─────────────────────────
+    async function handleMarche() {
+      const btn = document.getElementById('marcheBtn');
+      btn.disabled = true;
+
+      if (!isStopped) {
+        // ── Machine en marche → démarrer un arrêt ──────────
+        try {
+          const res = await fetch(API + '/start-stop', { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
+          updateUI(data);
+          addMsg('ARRÊT DÉMARRÉ', 'error');
+        } catch (e) {
+          addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
+        } finally {
+          btn.disabled = false;
+        }
+
+      } else {
+        // ── Machine arrêtée → essayer de redémarrer ────────
+        const elapsed = getElapsedSeconds();
+
+        if (elapsed < MICRO_STOP_THRESHOLD) {
+          // Micro-arrêt (<30s) → cause automatique 16, pas de sélection
+          addMsg(`MICRO-ARRÊT (${elapsed}s < 30s) — cause 16 automatique`, 'warn');
+          await endStop(16, 'Arrêt non considéré');
+          btn.disabled = false;
+        } else {
+          // Arrêt long (≥30s) → MUST choose a cause
+          btn.disabled = false;
+          openCauses();
+        }
       }
     }
 
+    // ── End the stop with a given cause ───────────────────
+    async function endStop(causeId, causeName) {
+      const btn = document.getElementById('marcheBtn');
+      btn.disabled = true;
+      closeCauses();
+      stopOverlayTimer();
+
+      try {
+        const res = await fetch(API + '/end-stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ causeId, causeName }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
+        updateUI(data);
+        addMsg(`REDÉMARRAGE — cause : ${causeName}`, 'ok');
+      } catch (e) {
+        addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── Causes overlay ─────────────────────────────────────
+    function openCauses() {
+      document.getElementById('causes-overlay').classList.add('active');
+      // Show current elapsed time immediately
+      const el = document.getElementById('overlayTimer');
+      if (el) el.textContent = formatDuration(getElapsedSeconds());
+      startOverlayTimer();
+    }
+    function closeCauses() {
+      document.getElementById('causes-overlay').classList.remove('active');
+      stopOverlayTimer();
+    }
+
+    // Called when user clicks a cause button in the overlay
+    function selectCause(btn) {
+      const causeId = Number(btn.dataset.id);
+      const causeName = btn.dataset.name;
+      endStop(causeId, causeName);
+    }
+
+    // ── Load causes from server ────────────────────────────
     async function loadCauses() {
       const spinner = document.getElementById('spinner');
       const grid = document.getElementById('causesGrid');
@@ -1082,13 +1176,19 @@
       }
     }
 
+    // ── Init ──────────────────────────────────────────────
     (async () => {
       loadCauses();
       addMsg('Système initialisé', 'info');
       try {
         const res = await fetch(API + '/status');
         const data = await res.json();
-        updateUI(data.isStopped, data.pendingCause);
+        updateUI(data);
+        if (data.isStopped) {
+          addMsg('Machine en arrêt (état restauré)', 'warn');
+        } else {
+          addMsg('MACHINE EN MARCHE', 'ok');
+        }
       } catch {
         addMsg('⚠ Serveur HMI non connecté', 'warn');
       }
