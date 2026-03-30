@@ -63,8 +63,16 @@
     ═══════════════════════════════════ */
     #hmi-main {
       display: grid;
-      width: 100vw;
-      height: 100vh;
+      /* ── SCALE FIX ──────────────────────────────────────────────────
+         At 100% browser zoom the layout looks identical to 125% zoom.
+         We shrink the element to 80% (= 100/1.25) of the viewport,
+         then scale it back up by 1.25× from the top-left corner.
+         Net result: fills the full viewport at native (100%) zoom.
+      ──────────────────────────────────────────────────────────────── */
+      width: calc(100vw / 1.25);
+      height: calc(100vh / 1.25);
+      transform: scale(1.25);
+      transform-origin: top left;
       grid-template-rows: 90px 1fr 88px;
       grid-template-columns: 210px 1fr 285px;
     }
@@ -640,11 +648,6 @@
       border-bottom-width: 1px;
     }
 
-    /* ══ MARCHE button — main toggle ══════════════════════
-       Green = machine en marche → click to STOP
-       Red   = machine arrêtée  → click to restart
-       (colour flips after action, not before)
-    ═════════════════════════════════════════════════════ */
     .marche-btn {
       height: 64px;
       padding: 0 26px;
@@ -689,7 +692,6 @@
       transform: none;
     }
 
-    /* When machine is stopped, button turns red to invite user to restart */
     .marche-btn.stopped {
       background: linear-gradient(180deg, #4d0000 0%, #660000 100%);
       border-color: #aa0000;
@@ -758,7 +760,6 @@
       text-shadow: 0 0 10px rgba(0, 200, 255, 0.4);
     }
 
-    /* Cause overlay has NO cancel button — user MUST choose a cause */
     .causes-notice {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.72rem;
@@ -843,7 +844,6 @@
       }
     }
 
-    /* Stop duration counter shown in overlay header */
     .stop-timer {
       font-family: 'Share Tech Mono', monospace;
       font-size: 1.1rem;
@@ -861,10 +861,6 @@
     <!-- HEADER -->
     <header class="hmi-header">
       <div class="logo-slot">
-        <!--
-        REPLACE with:
-        <img src="logo-tesca.png" style="max-height:62px;max-width:180px;object-fit:contain;"/>
-      -->
         <div class="logo-placeholder">
           <span class="lp-icon">🏭</span>
           <span>LOGO TESCA<br>[ à remplacer ]</span>
@@ -881,10 +877,6 @@
       </div>
 
       <div class="logo-slot right">
-        <!--
-        REPLACE with:
-        <img src="logo-ts2i.png" style="max-height:62px;max-width:180px;object-fit:contain;"/>
-      -->
         <div class="logo-placeholder">
           <span class="lp-icon">🔷</span>
           <span>LOGO TS2I<br>[ à remplacer ]</span>
@@ -941,11 +933,9 @@
 
     <!-- BOTTOM ROW -->
     <div class="bottom-row">
-      <!-- 2 red toggle buttons (future use) -->
       <button class="bot-btn" onclick="toggleBot(this)"></button>
       <button class="bot-btn" onclick="toggleBot(this)"></button>
 
-      <!-- Blue PARAMÈTRES — placeholder, not functional yet -->
       <div class="params-btn" title="Paramètres (à venir)">
         <span class="gear">⚙</span>
         <span class="params-label">Paramètres</span>
@@ -953,14 +943,8 @@
 
       <div class="bot-divider"></div>
 
-      <!-- Rezet_Selc placeholder -->
       <button class="razat-btn">Rezet_Selc</button>
 
-      <!--
-      MARCHE button — THE MAIN TOGGLE
-      Green = en marche  → click to start a stop
-      Red   = arrêtée    → click to restart (cause required if ≥30s)
-    -->
       <button class="marche-btn" id="marcheBtn" onclick="handleMarche()">
         ▶&nbsp;<span id="marcheBtnLabel">Marche</span>
       </button>
@@ -968,11 +952,7 @@
 
   </div>
 
-  <!-- ══════════════════════════════════════════
-     CAUSES OVERLAY
-     Appears only when stop ≥ 30s
-     NO cancel button — user MUST pick a cause
-══════════════════════════════════════════ -->
+  <!-- CAUSES OVERLAY -->
   <div id="causes-overlay">
     <div class="causes-panel">
       <div class="causes-panel-header">
@@ -991,18 +971,16 @@
 
   <script>
     const API = 'http://localhost:3000';
-    const MICRO_STOP_THRESHOLD = 30; // seconds
+    const MICRO_STOP_THRESHOLD = 30;
 
     let isStopped = false;
-    let stopStartTime = null;   // Date.now() of stop start (from server)
+    let stopStartTime = null;
     let pendingCause = null;
     let timerInterval = null;
 
-    // ── Eclairage / bot toggle ─────────────────────────────
     function toggleEcl(btn) { btn.classList.toggle('on'); }
     function toggleBot(btn) { btn.classList.toggle('on'); }
 
-    // ── Update all UI elements ─────────────────────────────
     function updateUI(data) {
       isStopped = data.isStopped;
       stopStartTime = data.stopStartTime || null;
@@ -1036,7 +1014,6 @@
       }
     }
 
-    // ── Message log ────────────────────────────────────────
     function addMsg(text, type = 'info') {
       const list = document.getElementById('msgList');
       const row = document.createElement('div');
@@ -1047,20 +1024,17 @@
       list.scrollTop = list.scrollHeight;
     }
 
-    // ── Format seconds as MM:SS ────────────────────────────
     function formatDuration(sec) {
       const m = Math.floor(sec / 60);
       const s = sec % 60;
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    // ── Elapsed stop time in seconds ───────────────────────
     function getElapsedSeconds() {
       if (!stopStartTime) return 0;
       return Math.floor((Date.now() - stopStartTime) / 1000);
     }
 
-    // ── Overlay timer updater ──────────────────────────────
     function startOverlayTimer() {
       stopOverlayTimer();
       timerInterval = setInterval(() => {
@@ -1072,13 +1046,11 @@
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     }
 
-    // ── MARCHE button — main logic ─────────────────────────
     async function handleMarche() {
       const btn = document.getElementById('marcheBtn');
       btn.disabled = true;
 
       if (!isStopped) {
-        // ── Machine en marche → démarrer un arrêt ──────────
         try {
           const res = await fetch(API + '/start-stop', { method: 'POST' });
           const data = await res.json();
@@ -1090,25 +1062,19 @@
         } finally {
           btn.disabled = false;
         }
-
       } else {
-        // ── Machine arrêtée → essayer de redémarrer ────────
         const elapsed = getElapsedSeconds();
-
         if (elapsed < MICRO_STOP_THRESHOLD) {
-          // Micro-arrêt (<30s) → cause automatique 16, pas de sélection
           addMsg(`MICRO-ARRÊT (${elapsed}s < 30s) — cause 16 automatique`, 'warn');
           await endStop(16, 'Arrêt non considéré');
           btn.disabled = false;
         } else {
-          // Arrêt long (≥30s) → MUST choose a cause
           btn.disabled = false;
           openCauses();
         }
       }
     }
 
-    // ── End the stop with a given cause ───────────────────
     async function endStop(causeId, causeName) {
       const btn = document.getElementById('marcheBtn');
       btn.disabled = true;
@@ -1132,10 +1098,8 @@
       }
     }
 
-    // ── Causes overlay ─────────────────────────────────────
     function openCauses() {
       document.getElementById('causes-overlay').classList.add('active');
-      // Show current elapsed time immediately
       const el = document.getElementById('overlayTimer');
       if (el) el.textContent = formatDuration(getElapsedSeconds());
       startOverlayTimer();
@@ -1145,14 +1109,12 @@
       stopOverlayTimer();
     }
 
-    // Called when user clicks a cause button in the overlay
     function selectCause(btn) {
       const causeId = Number(btn.dataset.id);
       const causeName = btn.dataset.name;
       endStop(causeId, causeName);
     }
 
-    // ── Load causes from server ────────────────────────────
     async function loadCauses() {
       const spinner = document.getElementById('spinner');
       const grid = document.getElementById('causesGrid');
@@ -1176,7 +1138,6 @@
       }
     }
 
-    // ── Init ──────────────────────────────────────────────
     (async () => {
       loadCauses();
       addMsg('Système initialisé', 'info');
