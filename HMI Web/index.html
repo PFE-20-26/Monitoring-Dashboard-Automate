@@ -58,17 +58,8 @@
       z-index: 9999;
     }
 
-    /* ═══════════════════════════════════
-       GRID
-    ═══════════════════════════════════ */
     #hmi-main {
       display: grid;
-      /* ── SCALE FIX ──────────────────────────────────────────────────
-         At 100% browser zoom the layout looks identical to 125% zoom.
-         We shrink the element to 80% (= 100/1.25) of the viewport,
-         then scale it back up by 1.25× from the top-left corner.
-         Net result: fills the full viewport at native (100%) zoom.
-      ──────────────────────────────────────────────────────────────── */
       width: calc(100vw / 1.25);
       height: calc(100vh / 1.25);
       transform: scale(1.25);
@@ -293,14 +284,12 @@
       padding: 12px 14px;
       background: var(--bg-base);
       min-height: 0;
-      /* ← prevent flex child from overflowing grid row */
       overflow: hidden;
     }
 
     .msg-panel {
       flex: 1;
       min-height: 0;
-      /* ← allow panel to shrink and scroll internally */
       background: var(--bg-inset);
       border: 1px solid var(--border-bright);
       border-radius: 3px;
@@ -541,7 +530,6 @@
       opacity: 0.5;
     }
 
-    /* Plain red toggle buttons */
     .bot-btn {
       flex: 1;
       height: 64px;
@@ -634,22 +622,20 @@
       background: linear-gradient(180deg, transparent, var(--border-bright), transparent);
     }
 
-    /* Rezet_Selc */
-    /* Rezet_Selc — reduced padding to make room for Sens btn */
     .razat-btn {
       height: 64px;
-      padding: 0 14px;
+      padding: 0 22px;
       flex-shrink: 0;
       background: linear-gradient(180deg, #141e2a 0%, #1a2535 100%);
       border: 1px solid var(--border-bright);
       border-bottom: 3px solid #3a5a80;
       border-radius: 4px;
       font-family: 'Rajdhani', sans-serif;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       font-weight: 700;
       color: var(--text-secondary);
       cursor: pointer;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       transition: all 0.12s;
       box-shadow: var(--btn-shadow);
@@ -665,7 +651,7 @@
       border-bottom-width: 1px;
     }
 
-    /* Sens button */
+    /* ── SENS button ──────────────────── */
     .sens-btn {
       height: 64px;
       padding: 0 18px;
@@ -691,6 +677,14 @@
       overflow: hidden;
     }
 
+    /* When Déroulement is active, tint the sens button red to indicate stopped state */
+    .sens-btn.deroulement-active {
+      border-color: var(--accent-red);
+      border-bottom-color: var(--accent-red);
+      box-shadow: var(--btn-shadow), 0 0 18px rgba(255, 23, 68, 0.4);
+      animation: pulseBtn 1.2s infinite;
+    }
+
     .sens-btn:hover {
       filter: brightness(1.18);
       box-shadow: var(--btn-shadow), 0 0 28px rgba(168, 85, 247, 0.45);
@@ -711,66 +705,6 @@
     .sens-label {
       font-size: 0.72rem;
     }
-
-    /* Sens overlay */
-    #sens-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(0, 0, 0, 0.82);
-      backdrop-filter: blur(5px);
-      align-items: center;
-      justify-content: center;
-    }
-
-    #sens-overlay.active {
-      display: flex;
-    }
-
-    /* Sens choice buttons inside overlay */
-    .sens-choice-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      border-bottom: 3px solid #6b21a8;
-      border-radius: 6px;
-      color: var(--text-secondary);
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
-      padding: 28px 16px;
-      cursor: pointer;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      transition: all 0.12s;
-    }
-
-    .sens-choice-btn:hover {
-      background: rgba(168, 85, 247, 0.1);
-      border-color: #a855f7;
-      border-bottom-color: #a855f7;
-      color: #d8b4fe;
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
-    }
-
-    .sens-choice-btn:active {
-      transform: scale(0.97);
-    }
-
-    .sens-choice-btn.active {
-      background: rgba(168, 85, 247, 0.15);
-      border-color: #a855f7;
-      border-bottom-color: #a855f7;
-      color: #d8b4fe;
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
-    }
-
 
     .marche-btn {
       height: 64px;
@@ -835,6 +769,22 @@
       50% {
         box-shadow: var(--btn-shadow), 0 0 32px rgba(255, 23, 68, 0.6);
       }
+    }
+
+    /* ─── SENS OVERLAY ───────────────── */
+    #sens-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(5px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #sens-overlay.active {
+      display: flex;
     }
 
     /* ─── CAUSES OVERLAY ─────────────── */
@@ -947,6 +897,58 @@
       transform: scale(0.97);
     }
 
+    /* Sens choice buttons */
+    .sens-choice-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-bottom: 3px solid #6b21a8;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 28px 16px;
+      cursor: pointer;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: all 0.12s;
+    }
+
+    .sens-choice-btn:hover {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: #a855f7;
+      border-bottom-color: #a855f7;
+      color: #d8b4fe;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
+    }
+
+    .sens-choice-btn:active {
+      transform: scale(0.97);
+    }
+
+    .sens-choice-btn.active {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: #a855f7;
+      border-bottom-color: #a855f7;
+      color: #d8b4fe;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    }
+
+    /* When Déroulement is active (machine stopped by sens), highlight it red */
+    .sens-choice-btn.active-stop {
+      background: rgba(255, 23, 68, 0.15);
+      border-color: var(--accent-red);
+      border-bottom-color: var(--accent-red);
+      color: var(--accent-red);
+      box-shadow: 0 0 20px rgba(255, 23, 68, 0.3);
+    }
+
     .spinner {
       display: none;
       width: 36px;
@@ -1000,7 +1002,7 @@
         </div>
         <div class="header-badge">
           <span class="bl">Sens :</span>
-          <span class="bv" id="headerSens">ENROULEMENT</span>
+          <span class="bv" id="headerSens">ENROULEMENT ←</span>
         </div>
       </div>
 
@@ -1014,7 +1016,6 @@
 
     <!-- LEFT — Eclairage -->
     <div class="left-col">
-
       <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 5</span></button>
       <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 4</span></button>
       <button class="ecl-btn" onclick="toggleEcl(this)">Eclairage<br><span class="ecl-num">TABLE 3</span></button>
@@ -1029,6 +1030,7 @@
           <div class="msg-header-dot"></div>
           <span class="msg-header-title">Journal des événements</span>
         </div>
+        <div class="cause-active-row" id="causeActiveRow">⚠ ARRÊT ACTIF — sélectionner une cause pour redémarrer</div>
         <div class="msg-list" id="msgList"></div>
       </div>
     </div>
@@ -1073,9 +1075,10 @@
 
       <button class="razat-btn" onclick="resetMessages()">Rezet_Selc</button>
 
-      <button class="sens-btn" onclick="openSens()">
+      <!-- SENS button — opens overlay -->
+      <button class="sens-btn" id="sensBtn" onclick="openSens()">
         <span class="sens-icon" id="sensBtnIcon">⟵⟶</span>
-        <span class="sens-label">Sens</span>
+        <span class="sens-label" id="sensBtnLabel">Sens</span>
       </button>
 
       <button class="marche-btn" id="marcheBtn" onclick="handleMarche()">
@@ -1085,11 +1088,46 @@
 
   </div>
 
+  <!-- SENS OVERLAY -->
+  <div id="sens-overlay">
+    <div class="causes-panel" style="max-width:440px;">
+      <div class="causes-panel-header">
+        <span class="causes-panel-title">⟵⟶ Sens de rotation</span>
+        <button onclick="closeSens()" style="
+          background:rgba(255,255,255,0.05);border:1px solid var(--border-bright);
+          color:var(--text-secondary);font-size:1.1rem;width:32px;height:32px;
+          border-radius:4px;cursor:pointer;display:flex;align-items:center;
+          justify-content:center;transition:all 0.12s;
+        " onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--text-secondary)'">✕</button>
+      </div>
+      <!-- Warning shown when machine is running and user picks Déroulement -->
+      <div id="sensWarning" style="
+        display:none;
+        font-family:'Share Tech Mono',monospace;font-size:0.72rem;
+        color:var(--accent-yellow);letter-spacing:0.06em;
+        padding:8px 20px;background:rgba(255,214,0,0.05);
+        border-bottom:1px solid rgba(255,214,0,0.1);
+      ">⚠ Sélectionner DÉROULEMENT déclenchera un arrêt machine.</div>
+      <div class="causes-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:4px 0;">
+          <button class="sens-choice-btn" id="btnEnroulement" onclick="selectSens('ENROULEMENT')">
+            <span style="font-size:2.2rem;line-height:1;">←</span>
+            <span>Enroulement</span>
+          </button>
+          <button class="sens-choice-btn" id="btnDeroulement" onclick="selectSens('DEROULEMENT')">
+            <span style="font-size:2.2rem;line-height:1;">→</span>
+            <span>Déroulement</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- CAUSES OVERLAY -->
   <div id="causes-overlay">
     <div class="causes-panel">
       <div class="causes-panel-header">
-        <span class="causes-panel-title">▶ Sélectionner la cause de l'arrêt</span>
+        <span class="causes-panel-title" id="causesTitle">▶ Sélectionner la cause de l'arrêt</span>
         <div style="display:flex;align-items:center;gap:16px;">
           <span class="stop-timer" id="overlayTimer">00:00</span>
           <button onclick="closeCauses()" id="overlayCloseBtn" style="
@@ -1110,119 +1148,27 @@
     </div>
   </div>
 
-  <!-- SENS OVERLAY -->
-  <div id="sens-overlay">
-    <div class="causes-panel" style="max-width:420px;">
-      <div class="causes-panel-header">
-        <span class="causes-panel-title">⟵⟶ Sens de rotation</span>
-        <button onclick="closeSens()" style="
-          background:rgba(255,255,255,0.05);border:1px solid var(--border-bright);
-          color:var(--text-secondary);font-size:1.1rem;width:32px;height:32px;
-          border-radius:4px;cursor:pointer;display:flex;align-items:center;
-          justify-content:center;transition:all 0.12s;
-        " onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--text-secondary)'">✕</button>
-      </div>
-      <div class="causes-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:4px 0;">
-          <button class="sens-choice-btn" id="btnEnroulement" onclick="selectSens('ENROULEMENT')">
-            <span style="font-size:2.2rem;line-height:1;">←</span>
-            <span>Enroulement</span>
-          </button>
-          <button class="sens-choice-btn" id="btnDeroulement" onclick="selectSens('DEROULEMENT')">
-            <span style="font-size:2.2rem;line-height:1;">→</span>
-            <span>Déroulement</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
     const API = 'http://localhost:3000';
+    const MICRO_STOP_THRESHOLD = 30;
 
-    let systemOn = true;
+    // ── Client-side state (synced from server) ─────────────
+    let isStopped = false;
+    let stopStartTime = null;
+    let pendingCause = null;
     let currentSens = 'ENROULEMENT';
-    let speedSimulation;
+    let stopTriggeredBySens = false;
 
-    function openSens() {
-      document.getElementById('sens-overlay').classList.add('active');
-      document.getElementById('btnEnroulement').classList.toggle('active', currentSens === 'ENROULEMENT');
-      document.getElementById('btnDeroulement').classList.toggle('active', currentSens === 'DEROULEMENT');
-    }
+    let timerInterval = null;
+    let _manualOpen = false;
 
-    function closeSens() {
-      document.getElementById('sens-overlay').classList.remove('active');
-    }
-
-
-    function selectSens(val) {
-      currentSens = val;
-      const isEnr = val === 'ENROULEMENT';
-      document.getElementById('headerSens').textContent = isEnr ? 'ENROULEMENT \u2190' : 'D\u00c9ROULEMENT \u2192';
-      document.getElementById('sensBtnIcon').textContent = isEnr ? '\u2190' : '\u2192';
-      addMsg(`Sens : ${isEnr ? 'Enroulement \u2190' : 'D\u00e9roulement \u2192'}`, 'info');
-      const btnEnr = document.getElementById('btnEnroulement');
-      const btnDer = document.getElementById('btnDeroulement');
-      if (btnEnr) btnEnr.classList.toggle('active', isEnr);
-      if (btnDer) btnDer.classList.toggle('active', !isEnr);
-      closeSens();
-    }
-
+    // ── Helpers ───────────────────────────────────────────
     function toggleEcl(btn) { btn.classList.toggle('on'); }
     function toggleBot(btn) { btn.classList.toggle('on'); }
 
-    function handleMarche() {
-      systemOn = !systemOn;
-      const marcheBtn = document.getElementById('marcheBtn');
-      const marcheLbl = document.getElementById('marcheBtnLabel');
-      const headerState = document.getElementById('headerState');
-      const headerDot = document.getElementById('headerDot');
-      const statusDot = document.getElementById('statusDot');
-      const statusVal = document.getElementById('statusVal');
-      if (systemOn) {
-        marcheBtn.classList.remove('stopped');
-        marcheLbl.textContent = 'Marche';
-        headerState.textContent = 'MARCHE';
-        headerDot.classList.remove('red');
-        statusDot.classList.remove('stopped');
-        statusVal.textContent = 'EN MARCHE';
-        statusVal.classList.remove('stopped');
-        addMsg('SYST\u00c8ME D\u00c9MARR\u00c9', 'ok');
-        startSimulation();
-      } else {
-        marcheBtn.classList.add('stopped');
-        marcheLbl.textContent = 'Arr\u00eat';
-        headerState.textContent = 'ARR\u00caT';
-        headerDot.classList.add('red');
-        statusDot.classList.add('stopped');
-        statusVal.textContent = 'ARR\u00caT\u00c9';
-        statusVal.classList.add('stopped');
-        addMsg('SYST\u00c8ME ARR\u00caT\u00c9', 'warn');
-        stopSimulation();
-      }
-    }
-
     function resetMessages() {
       document.getElementById('msgList').innerHTML = '';
-      addMsg('Journal r\u00e9initialis\u00e9', 'info');
-    }
-
-    function startSimulation() {
-      if (speedSimulation) clearInterval(speedSimulation);
-      speedSimulation = setInterval(() => {
-        if (!systemOn) return;
-        const displays = document.querySelectorAll('.display-value');
-        const speed = (Math.random() * 50 + 475).toFixed(0);
-        const count = (parseFloat(displays[2].textContent) || 0) + 0.1;
-        displays[0].textContent = '500';
-        displays[1].textContent = speed;
-        displays[2].textContent = count.toFixed(2);
-      }, 1000);
-    }
-
-    function stopSimulation() {
-      if (speedSimulation) clearInterval(speedSimulation);
-      document.querySelectorAll('.display-value')[1].textContent = '0';
+      addMsg('Journal réinitialisé', 'info');
     }
 
     function addMsg(text, type = 'info') {
@@ -1238,23 +1184,235 @@
     function formatDuration(sec) {
       const m = Math.floor(sec / 60);
       const s = sec % 60;
-      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    function openCauses(manual = false) {
-      document.getElementById('causes-overlay').classList.add('active');
-      document.getElementById('causesNotice').style.display = 'none';
-      document.getElementById('overlayTimer').style.display = 'none';
-      document.getElementById('overlayCloseBtn').style.display = 'flex';
+    function getElapsedSeconds() {
+      if (!stopStartTime) return 0;
+      return Math.floor((Date.now() - stopStartTime) / 1000);
     }
+
+    // ── UI sync ───────────────────────────────────────────
+    function updateUI(data) {
+      isStopped = data.isStopped;
+      stopStartTime = data.stopStartTime || null;
+      pendingCause = data.pendingCause || null;
+      currentSens = data.currentSens || 'ENROULEMENT';
+      stopTriggeredBySens = data.stopTriggeredBySens || false;
+
+      const dot = document.getElementById('statusDot');
+      const statusVal = document.getElementById('statusVal');
+      const headerDot = document.getElementById('headerDot');
+      const headerSt = document.getElementById('headerState');
+      const headerSens = document.getElementById('headerSens');
+      const marcheBtn = document.getElementById('marcheBtn');
+      const marcheLbl = document.getElementById('marcheBtnLabel');
+      const causeRow = document.getElementById('causeActiveRow');
+      const sensBtn = document.getElementById('sensBtn');
+      const sensBtnIcon = document.getElementById('sensBtnIcon');
+      const sensBtnLabel = document.getElementById('sensBtnLabel');
+
+      // Stopped state
+      if (isStopped) {
+        dot.classList.add('stopped');
+        statusVal.textContent = 'ARRÊT'; statusVal.classList.add('stopped');
+        headerDot.classList.add('red');
+        headerSt.textContent = 'ARRÊT'; headerSt.style.color = 'var(--accent-red)';
+        marcheBtn.classList.add('stopped');
+        marcheLbl.textContent = 'Arrêt';
+
+        if (stopTriggeredBySens) {
+          causeRow.textContent = '⚠ ARRÊT (DÉROULEMENT) — sélectionner ENROULEMENT pour redémarrer';
+        } else {
+          causeRow.textContent = '⚠ ARRÊT ACTIF — sélectionner une cause pour redémarrer';
+        }
+        causeRow.classList.add('visible');
+      } else {
+        dot.classList.remove('stopped');
+        statusVal.textContent = 'EN MARCHE'; statusVal.classList.remove('stopped');
+        headerDot.classList.remove('red');
+        headerSt.textContent = 'MARCHE'; headerSt.style.color = '';
+        marcheBtn.classList.remove('stopped');
+        marcheLbl.textContent = 'Marche';
+        causeRow.classList.remove('visible');
+      }
+
+      // Sens label in header + sens button
+      const isEnr = currentSens === 'ENROULEMENT';
+      headerSens.textContent = isEnr ? 'ENROULEMENT ←' : 'DÉROULEMENT →';
+      sensBtnIcon.textContent = isEnr ? '←' : '→';
+      sensBtnLabel.textContent = isEnr ? 'Enroulement' : 'Déroulement';
+
+      // Highlight sens button red if machine is stopped by sens
+      if (stopTriggeredBySens && isStopped) {
+        sensBtn.classList.add('deroulement-active');
+      } else {
+        sensBtn.classList.remove('deroulement-active');
+      }
+    }
+
+    // ── SENS overlay ──────────────────────────────────────
+    function openSens() {
+      const isEnr = currentSens === 'ENROULEMENT';
+      document.getElementById('btnEnroulement').classList.toggle('active', isEnr);
+      document.getElementById('btnEnroulement').classList.toggle('active-stop', false);
+      document.getElementById('btnDeroulement').classList.toggle('active', !isEnr && !stopTriggeredBySens);
+      document.getElementById('btnDeroulement').classList.toggle('active-stop', !isEnr && stopTriggeredBySens);
+
+      // Show warning only when machine is running (would trigger a stop)
+      document.getElementById('sensWarning').style.display = (!isStopped) ? '' : 'none';
+      document.getElementById('sens-overlay').classList.add('active');
+    }
+
+    function closeSens() {
+      document.getElementById('sens-overlay').classList.remove('active');
+    }
+
+    async function selectSens(newSens) {
+      closeSens();
+      if (newSens === currentSens) return; // no change
+
+      try {
+        const res = await fetch(API + '/set-sens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sens: newSens }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
+
+        updateUI(data);
+
+        if (newSens === 'DEROULEMENT') {
+          addMsg('SENS → DÉROULEMENT — ARRÊT DÉCLENCHÉ', 'error');
+          // Don't show cause overlay yet — user must switch back to Enroulement first
+        } else if (newSens === 'ENROULEMENT') {
+          addMsg('SENS → ENROULEMENT', 'info');
+          // If the stop was triggered by sens, now we need cause selection to resume
+          if (data.stopTriggeredBySens && data.isStopped) {
+            // Small delay so the UI updates first
+            setTimeout(() => openCauses(false), 200);
+          }
+        }
+      } catch (e) {
+        addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
+      }
+    }
+
+    // ── MARCHE button ─────────────────────────────────────
+    async function handleMarche() {
+      const btn = document.getElementById('marcheBtn');
+      btn.disabled = true;
+
+      if (!isStopped) {
+        // Machine is running → trigger stop
+        try {
+          const res = await fetch(API + '/start-stop', { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
+          updateUI(data);
+          addMsg('ARRÊT DÉMARRÉ', 'error');
+        } catch (e) {
+          addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
+        } finally {
+          btn.disabled = false;
+        }
+      } else {
+        // Machine is stopped — but if stopped by sens, Marche button does nothing
+        // (user must go through Enroulement → cause selection)
+        if (stopTriggeredBySens) {
+          addMsg('⚠ Arrêt dû au sens — sélectionner ENROULEMENT pour redémarrer', 'warn');
+          btn.disabled = false;
+          return;
+        }
+
+        const elapsed = getElapsedSeconds();
+        if (elapsed < MICRO_STOP_THRESHOLD) {
+          addMsg(`MICRO-ARRÊT (${elapsed}s < 30s) — cause 16 automatique`, 'warn');
+          await endStop(16, 'Arrêt non considéré');
+          btn.disabled = false;
+        } else {
+          btn.disabled = false;
+          openCauses(false);
+        }
+      }
+    }
+
+    async function endStop(causeId, causeName) {
+      const btn = document.getElementById('marcheBtn');
+      btn.disabled = true;
+      closeCauses();
+      stopOverlayTimer();
+
+      try {
+        const res = await fetch(API + '/end-stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ causeId, causeName }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
+        updateUI(data);
+        addMsg(`REDÉMARRAGE — cause : ${causeName}`, 'ok');
+      } catch (e) {
+        addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── Timer helpers ─────────────────────────────────────
+    function startOverlayTimer() {
+      stopOverlayTimer();
+      timerInterval = setInterval(() => {
+        const el = document.getElementById('overlayTimer');
+        if (el) el.textContent = formatDuration(getElapsedSeconds());
+      }, 500);
+    }
+
+    function stopOverlayTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    }
+
+    // ── CAUSES overlay ────────────────────────────────────
+    function openCauses(manual = false) {
+      _manualOpen = manual;
+      document.getElementById('causes-overlay').classList.add('active');
+      const notice = document.getElementById('causesNotice');
+      const timer = document.getElementById('overlayTimer');
+      const closeBtn = document.getElementById('overlayCloseBtn');
+      const title = document.getElementById('causesTitle');
+
+      if (manual) {
+        notice.style.display = 'none';
+        timer.style.display = 'none';
+        closeBtn.style.display = 'flex';
+        title.textContent = '⚙ Causes d\'arrêt';
+      } else {
+        notice.style.display = '';
+        timer.style.display = '';
+        closeBtn.style.display = 'none';
+        title.textContent = '▶ Sélectionner la cause de l\'arrêt';
+        timer.textContent = formatDuration(getElapsedSeconds());
+        startOverlayTimer();
+      }
+    }
+
     function closeCauses() {
       document.getElementById('causes-overlay').classList.remove('active');
+      stopOverlayTimer();
+      _manualOpen = false;
     }
 
     function selectCause(btn) {
+      const causeId = Number(btn.dataset.id);
       const causeName = btn.dataset.name;
-      addMsg(`Cause s\u00e9lectionn\u00e9e : ${causeName}`, 'info');
-      closeCauses();
+      if (_manualOpen) {
+        addMsg(`Cause sélectionnée (manuel) : ${causeName}`, 'info');
+        closeCauses();
+        return;
+      }
+      endStop(causeId, causeName);
     }
 
     async function loadCauses() {
@@ -1266,22 +1424,36 @@
         if (!res.ok) throw new Error('Erreur ' + res.status);
         const causes = await res.json();
         spinner.classList.remove('visible');
-        grid.innerHTML = causes.map(c => `<button class="cause-btn" data-id="${c.id}" data-name="${c.name.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}" onclick="selectCause(this)">${c.name}</button>`).join('');
+        grid.innerHTML = causes.map(c => `
+          <button class="cause-btn"
+            data-id="${c.id}"
+            data-name="${c.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+            onclick="selectCause(this)">${c.name}</button>
+        `).join('');
       } catch (e) {
         spinner.classList.remove('visible');
-        const fallbacks = [
-          {id:1,name:'Arr\u00eat Urgence'},{id:2,name:'D\u00e9faut Variateur'},
-          {id:3,name:'Fin de Bobine'},{id:4,name:'Rupture Fil'},
-          {id:5,name:'Porte Ouverte'},{id:6,name:'Surcharge'}
-        ];
-        grid.innerHTML = fallbacks.map(c => `<button class="cause-btn" data-id="${c.id}" data-name="${c.name}" onclick="selectCause(this)">${c.name}</button>`).join('');
+        grid.innerHTML = `<p style="color:var(--accent-red);padding:16px;grid-column:1/-1;
+          font-family:'Share Tech Mono',monospace;font-size:.8rem;">
+          ⚠ Erreur chargement causes : ${e.message}</p>`;
       }
     }
 
+    // ── Init ──────────────────────────────────────────────
     (async () => {
-      addMsg('Syst\u00e8me initialis\u00e9', 'info');
-      await loadCauses();
-      startSimulation();
+      loadCauses();
+      addMsg('Système initialisé', 'info');
+      try {
+        const res = await fetch(API + '/status');
+        const data = await res.json();
+        updateUI(data);
+        if (data.isStopped) {
+          addMsg('Machine en arrêt (état restauré)', 'warn');
+        } else {
+          addMsg('MACHINE EN MARCHE', 'ok');
+        }
+      } catch {
+        addMsg('⚠ Serveur HMI non connecté', 'warn');
+      }
     })();
   </script>
 </body>
