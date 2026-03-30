@@ -916,7 +916,6 @@
           <div class="msg-header-dot"></div>
           <span class="msg-header-title">Journal des événements</span>
         </div>
-        <div class="cause-active-row" id="causeActiveRow">⚠ ARRÊT ACTIF — CAUSE : —</div>
         <div class="msg-list" id="msgList"></div>
       </div>
     </div>
@@ -995,46 +994,27 @@
 
   <script>
     const API = 'http://localhost:3000';
-    const MICRO_STOP_THRESHOLD = 30;
 
-    let isStopped = false;
-    let stopStartTime = null;
-    let pendingCause = null;
-    let timerInterval = null;
+    let systemOn = true; // power state of the Marche button
 
     function toggleEcl(btn) { btn.classList.toggle('on'); }
     function toggleBot(btn) { btn.classList.toggle('on'); }
 
-    function updateUI(data) {
-      isStopped = data.isStopped;
-      stopStartTime = data.stopStartTime || null;
-      pendingCause = data.pendingCause || null;
+    // ── Marche button — simple power ON/OFF toggle ─────────
+    function handleMarche() {
+      systemOn = !systemOn;
 
-      const dot = document.getElementById('statusDot');
-      const statusVal = document.getElementById('statusVal');
-      const headerDot = document.getElementById('headerDot');
-      const headerSt = document.getElementById('headerState');
       const marcheBtn = document.getElementById('marcheBtn');
       const marcheLbl = document.getElementById('marcheBtnLabel');
-      const causeRow = document.getElementById('causeActiveRow');
 
-      if (isStopped) {
-        dot.classList.add('stopped');
-        statusVal.textContent = 'ARRÊT'; statusVal.classList.add('stopped');
-        headerDot.classList.add('red');
-        headerSt.textContent = 'ARRÊT'; headerSt.style.color = 'var(--accent-red)';
-        marcheBtn.classList.add('stopped');
-        marcheLbl.textContent = 'Arrêt';
-        causeRow.textContent = '⚠ ARRÊT ACTIF — sélectionner une cause pour redémarrer';
-        causeRow.classList.add('visible');
-      } else {
-        dot.classList.remove('stopped');
-        statusVal.textContent = 'EN MARCHE'; statusVal.classList.remove('stopped');
-        headerDot.classList.remove('red');
-        headerSt.textContent = 'MARCHE'; headerSt.style.color = '';
+      if (systemOn) {
         marcheBtn.classList.remove('stopped');
         marcheLbl.textContent = 'Marche';
-        causeRow.classList.remove('visible');
+        addMsg('SYSTÈME DÉMARRÉ', 'ok');
+      } else {
+        marcheBtn.classList.add('stopped');
+        marcheLbl.textContent = 'Arrêt';
+        addMsg('SYSTÈME ARRÊTÉ', 'error');
       }
     }
 
@@ -1054,110 +1034,21 @@
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    function getElapsedSeconds() {
-      if (!stopStartTime) return 0;
-      return Math.floor((Date.now() - stopStartTime) / 1000);
-    }
-
-    function startOverlayTimer() {
-      stopOverlayTimer();
-      timerInterval = setInterval(() => {
-        const el = document.getElementById('overlayTimer');
-        if (el) el.textContent = formatDuration(getElapsedSeconds());
-      }, 500);
-    }
-    function stopOverlayTimer() {
-      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-    }
-
-    async function handleMarche() {
-      const btn = document.getElementById('marcheBtn');
-      btn.disabled = true;
-
-      if (!isStopped) {
-        try {
-          const res = await fetch(API + '/start-stop', { method: 'POST' });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
-          updateUI(data);
-          addMsg('ARRÊT DÉMARRÉ', 'error');
-        } catch (e) {
-          addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
-        } finally {
-          btn.disabled = false;
-        }
-      } else {
-        const elapsed = getElapsedSeconds();
-        if (elapsed < MICRO_STOP_THRESHOLD) {
-          addMsg(`MICRO-ARRÊT (${elapsed}s < 30s) — cause 16 automatique`, 'warn');
-          await endStop(16, 'Arrêt non considéré');
-          btn.disabled = false;
-        } else {
-          btn.disabled = false;
-          openCauses();
-        }
-      }
-    }
-
-    async function endStop(causeId, causeName) {
-      const btn = document.getElementById('marcheBtn');
-      btn.disabled = true;
-      closeCauses();
-      stopOverlayTimer();
-
-      try {
-        const res = await fetch(API + '/end-stop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ causeId, causeName }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erreur ' + res.status);
-        updateUI(data);
-        addMsg(`REDÉMARRAGE — cause : ${causeName}`, 'ok');
-      } catch (e) {
-        addMsg('⚠ ' + (e.message || 'Serveur injoignable'), 'warn');
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    let _manualOpen = false;
-
+    // ── Causes overlay (blue button only) ─────────────────
     function openCauses(manual = false) {
-      _manualOpen = manual;
       document.getElementById('causes-overlay').classList.add('active');
-      const notice = document.getElementById('causesNotice');
-      const timer = document.getElementById('overlayTimer');
-      const closeBtn = document.getElementById('overlayCloseBtn');
-      if (manual) {
-        notice.style.display = 'none';
-        timer.style.display = 'none';
-        closeBtn.style.display = 'flex';
-      } else {
-        notice.style.display = '';
-        timer.style.display = '';
-        closeBtn.style.display = 'none';
-        timer.textContent = formatDuration(getElapsedSeconds());
-        startOverlayTimer();
-      }
+      document.getElementById('causesNotice').style.display = 'none';
+      document.getElementById('overlayTimer').style.display = 'none';
+      document.getElementById('overlayCloseBtn').style.display = 'flex';
     }
     function closeCauses() {
       document.getElementById('causes-overlay').classList.remove('active');
-      stopOverlayTimer();
-      _manualOpen = false;
     }
 
     function selectCause(btn) {
-      const causeId = Number(btn.dataset.id);
       const causeName = btn.dataset.name;
-      if (_manualOpen) {
-        // Opened from blue button — just close, no stop to end
-        addMsg(`Cause sélectionnée (manuel) : ${causeName}`, 'info');
-        closeCauses();
-        return;
-      }
-      endStop(causeId, causeName);
+      addMsg(`Cause sélectionnée : ${causeName}`, 'info');
+      closeCauses();
     }
 
     async function loadCauses() {
@@ -1175,6 +1066,7 @@
           data-name="${c.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
           onclick="selectCause(this)">${c.name}</button>
       `).join('');
+
       } catch (e) {
         spinner.classList.remove('visible');
         grid.innerHTML = `<p style="color:var(--accent-red);padding:16px;grid-column:1/-1;
@@ -1184,20 +1076,8 @@
     }
 
     (async () => {
-      loadCauses();
       addMsg('Système initialisé', 'info');
-      try {
-        const res = await fetch(API + '/status');
-        const data = await res.json();
-        updateUI(data);
-        if (data.isStopped) {
-          addMsg('Machine en arrêt (état restauré)', 'warn');
-        } else {
-          addMsg('MACHINE EN MARCHE', 'ok');
-        }
-      } catch {
-        addMsg('⚠ Serveur HMI non connecté', 'warn');
-      }
+      await loadCauses();
     })();
   </script>
 </body>
