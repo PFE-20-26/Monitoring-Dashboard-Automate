@@ -292,10 +292,15 @@
       flex-direction: column;
       padding: 12px 14px;
       background: var(--bg-base);
+      min-height: 0;
+      /* ← prevent flex child from overflowing grid row */
+      overflow: hidden;
     }
 
     .msg-panel {
       flex: 1;
+      min-height: 0;
+      /* ← allow panel to shrink and scroll internally */
       background: var(--bg-inset);
       border: 1px solid var(--border-bright);
       border-radius: 3px;
