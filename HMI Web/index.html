@@ -570,7 +570,7 @@
       box-shadow: var(--btn-shadow), 0 0 18px rgba(0, 230, 118, 0.4);
     }
 
-    /* Blue PARAMÈTRES (non-functional placeholder) */
+    /* Blue CAUSES button */
     .params-btn {
       width: 90px;
       height: 68px;
@@ -579,7 +579,7 @@
       border: 1px solid #0066ee;
       border-bottom: 3px solid var(--accent-cyan);
       border-radius: 5px;
-      cursor: default;
+      cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -589,7 +589,18 @@
         inset 0 1px 0 rgba(100, 180, 255, 0.15);
       position: relative;
       overflow: hidden;
-      opacity: 0.75;
+      transition: all 0.12s;
+    }
+
+    .params-btn:hover {
+      filter: brightness(1.18);
+      box-shadow: var(--btn-shadow), 0 0 32px rgba(0, 119, 255, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .params-btn:active {
+      transform: translateY(1px);
+      border-bottom-width: 1px;
     }
 
     .params-btn::before {
@@ -941,9 +952,9 @@
       <button class="bot-btn" onclick="toggleBot(this)"></button>
       <button class="bot-btn" onclick="toggleBot(this)"></button>
 
-      <div class="params-btn" title="Paramètres (à venir)">
+      <div class="params-btn" title="Causes d'arrêt" onclick="openCauses(true)">
         <span class="gear">⚙</span>
-        <span class="params-label">Paramètres</span>
+        <span class="params-label">Causes</span>
       </div>
 
       <div class="bot-divider"></div>
@@ -962,9 +973,17 @@
     <div class="causes-panel">
       <div class="causes-panel-header">
         <span class="causes-panel-title">▶ Sélectionner la cause de l'arrêt</span>
-        <span class="stop-timer" id="overlayTimer">00:00</span>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span class="stop-timer" id="overlayTimer">00:00</span>
+          <button onclick="closeCauses()" id="overlayCloseBtn" style="
+            background:rgba(255,255,255,0.05);border:1px solid var(--border-bright);
+            color:var(--text-secondary);font-size:1.1rem;width:32px;height:32px;
+            border-radius:4px;cursor:pointer;display:none;align-items:center;
+            justify-content:center;transition:all 0.12s;
+          " onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--text-secondary)'">✕</button>
+        </div>
       </div>
-      <div class="causes-notice">
+      <div class="causes-notice" id="causesNotice">
         ⚠ Durée ≥ 30s — La sélection d'une cause est obligatoire pour redémarrer.
       </div>
       <div class="causes-body">
@@ -1103,20 +1122,41 @@
       }
     }
 
-    function openCauses() {
+    let _manualOpen = false;
+
+    function openCauses(manual = false) {
+      _manualOpen = manual;
       document.getElementById('causes-overlay').classList.add('active');
-      const el = document.getElementById('overlayTimer');
-      if (el) el.textContent = formatDuration(getElapsedSeconds());
-      startOverlayTimer();
+      const notice = document.getElementById('causesNotice');
+      const timer = document.getElementById('overlayTimer');
+      const closeBtn = document.getElementById('overlayCloseBtn');
+      if (manual) {
+        notice.style.display = 'none';
+        timer.style.display = 'none';
+        closeBtn.style.display = 'flex';
+      } else {
+        notice.style.display = '';
+        timer.style.display = '';
+        closeBtn.style.display = 'none';
+        timer.textContent = formatDuration(getElapsedSeconds());
+        startOverlayTimer();
+      }
     }
     function closeCauses() {
       document.getElementById('causes-overlay').classList.remove('active');
       stopOverlayTimer();
+      _manualOpen = false;
     }
 
     function selectCause(btn) {
       const causeId = Number(btn.dataset.id);
       const causeName = btn.dataset.name;
+      if (_manualOpen) {
+        // Opened from blue button — just close, no stop to end
+        addMsg(`Cause sélectionnée (manuel) : ${causeName}`, 'info');
+        closeCauses();
+        return;
+      }
       endStop(causeId, causeName);
     }
 
